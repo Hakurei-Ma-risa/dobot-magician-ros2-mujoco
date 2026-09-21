@@ -1,0 +1,227 @@
+{
+  "magicianBase": [
+    {
+      "file": "magicianBase_46_46_46.obj",
+      "rgba": [
+        0.180392,
+        0.180392,
+        0.180392,
+        1.0
+      ],
+      "vertices": 9920,
+      "faces": 10046
+    },
+    {
+      "file": "magicianBase_46_51_54.obj",
+      "rgba": [
+        0.180392,
+        0.2,
+        0.211765,
+        1.0
+      ],
+      "vertices": 248,
+      "faces": 166
+    },
+    {
+      "file": "magicianBase_138_224_51.obj",
+      "rgba": [
+        0.541176,
+        0.878431,
+        0.2,
+        1.0
+      ],
+      "vertices": 224,
+      "faces": 248
+    },
+    {
+      "file": "magicianBase_184_189_181.obj",
+      "rgba": [
+        0.721569,
+        0.741176,
+        0.709804,
+        1.0
+      ],
+      "vertices": 452,
+      "faces": 298
+    },
+    {
+      "file": "magicianBase_204_204_204.obj",
+      "rgba": [
+        0.8,
+        0.8,
+        0.8,
+        1.0
+      ],
+      "vertices": 7111,
+      "faces": 6856
+    }
+  ],
+  "magicianLink1": [
+    {
+      "file": "magicianLink1_46_46_46.obj",
+      "rgba": [
+        0.180392,
+        0.180392,
+        0.180392,
+        1.0
+      ],
+      "vertices": 14816,
+      "faces": 14672
+    },
+    {
+      "file": "magicianLink1_204_204_204.obj",
+      "rgba": [
+        0.8,
+        0.8,
+        0.8,
+        1.0
+      ],
+      "vertices": 7619,
+      "faces": 8023
+    }
+  ],
+  "magicianLink2": [
+    {
+      "file": "magicianLink2_46_46_46.obj",
+      "rgba": [
+        0.180392,
+        0.180392,
+        0.180392,
+        1.0
+      ],
+      "vertices": 7442,
+      "faces": 8242
+    },
+    {
+      "file": "magicianLink2_87_89_86.obj",
+      "rgba": [
+        0.341176,
+        0.34902,
+        0.337255,
+        1.0
+      ],
+      "vertices": 1568,
+      "faces": 1078
+    },
+    {
+      "file": "magicianLink2_204_204_204.obj",
+      "rgba": [
+        0.8,
+        0.8,
+        0.8,
+        1.0
+      ],
+      "vertices": 3521,
+      "faces": 3061
+    }
+  ],
+  "magicianLink3": [
+    {
+      "file": "magicianLink3_46_46_46.obj",
+      "rgba": [
+        0.180392,
+        0.180392,
+        0.180392,
+        1.0
+      ],
+      "vertices": 5471,
+      "faces": 5967
+    },
+    {
+      "file": "magicianLink3_87_89_86.obj",
+      "rgba": [
+        0.341176,
+        0.34902,
+        0.337255,
+        1.0
+      ],
+      "vertices": 448,
+      "faces": 308
+    },
+    {
+      "file": "magicianLink3_204_204_204.obj",
+      "rgba": [
+        0.8,
+        0.8,
+        0.8,
+        1.0
+      ],
+      "vertices": 10767,
+      "faces": 10598
+    }
+  ],
+  "magicianLink4": [
+    {
+      "file": "magicianLink4_46_46_46.obj",
+      "rgba": [
+        0.180392,
+        0.180392,
+        0.180392,
+        1.0
+      ],
+      "vertices": 11209,
+      "faces": 6964
+    }
+  ],
+  "gripper_core": [
+    {
+      "file": "gripper_core_46_46_46.obj",
+      "rgba": [
+        0.180392,
+        0.180392,
+        0.180392,
+        1.0
+      ],
+      "vertices": 192,
+      "faces": 124
+    },
+    {
+      "file": "gripper_core_84_87_83.obj",
+      "rgba": [
+        0.329412,
+        0.341176,
+        0.32549,
+        1.0
+      ],
+      "vertices": 10521,
+      "faces": 5272
+    }
+  ],
+  "jaw_left": [
+    {
+      "file": "jaw_left_46_46_46.obj",
+      "rgba": [
+        0.180392,
+        0.180392,
+        0.180392,
+        1.0
+      ],
+      "vertices": 2148,
+      "faces": 1473
+    },
+    {
+      "file": "jaw_left_84_87_83.obj",
+      "rgba": [
+        0.329412,
+        0.341176,
+        0.32549,
+        1.0
+      ],
+      "vertices": 4515,
+      "faces": 3099
+    }
+  ],
+  "jaw_right": [
+    {
+      "file": "jaw_right_46_46_46.obj",
+      "rgba": [
+        0.180392,
+        0.180392,
+        0.180392,
+        1.0
+      ],
+      "vertices": 5548,
+      "faces": 3025
+    }
+  ]
+}

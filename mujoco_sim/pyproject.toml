@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dobot-magician-mujoco"
+version = "0.1.0"
+description = "MuJoCo validation model and Gymnasium environment for Dobot Magician"
+requires-python = ">=3.10"
+dependencies = [
+  "gymnasium>=1.1,<2",
+  "mujoco==3.13.0",
+  "numpy>=2,<3",
+  "pillow>=11",
+  "pycollada>=0.9,<1",
+  "trimesh>=5,<6",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.setuptools]
+packages = ["dobot_mujoco"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,28 @@
+embodiment:
+  name: dobot_magician
+  max_payload_kg: 0.5
+  manipulators:
+    arm:
+      root_frame: magician_base_link
+      tip_frame: TCP
+      joint_names:
+        - magician_joint_1
+        - magician_joint_2
+        - magician_joint_3
+        - magician_joint_4
+      task_axes: [true, true, true, false, false, true]
+      control_modes: [joint_position, task_pose]
+      command_rate_hz: 20.0
+      vendor_joint_convention: [theta1, theta2, theta3_absolute, theta4]
+      model_joint_convention: [theta1, theta2, theta3_minus_theta2, theta4]
+  end_effectors:
+    gripper:
+      kind: parallel_gripper
+      command_modes: [open, close]
+      max_opening_m: 0.027
+  workspace_m:
+    lower: [-0.35, -0.35, 0.015]
+    upper: [0.35, 0.35, 0.38]
+  raw_joint_limits_deg:
+    lower: [-125.0, -5.0, -15.0, -150.0]
+    upper: [125.0, 90.0, 70.0, 150.0]

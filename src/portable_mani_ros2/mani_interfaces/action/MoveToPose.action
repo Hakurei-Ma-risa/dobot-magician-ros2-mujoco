@@ -1,0 +1,18 @@
+# Goal
+string group_name
+geometry_msgs/PoseStamped target
+bool[6] controlled_axes
+float64 position_tolerance_m
+float64 orientation_tolerance_rad
+float64 velocity_scale
+float64 acceleration_scale
+---
+# Result
+bool success
+string message
+geometry_msgs/PoseStamped achieved_pose
+---
+# Feedback
+float32 progress
+geometry_msgs/PoseStamped current_pose
+

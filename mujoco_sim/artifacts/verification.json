@@ -1,0 +1,15 @@
+{
+  "model": "dobot_magician_validation",
+  "nq": 8,
+  "nv": 8,
+  "nu": 5,
+  "equality_constraints": 3,
+  "random_samples": 1000,
+  "max_roundtrip_error_rad": 2.220446049250313e-16,
+  "max_wrist_fk_error_m": 1.2719202621569003e-16,
+  "max_tcp_fk_error_m": 3.847478052177133e-13,
+  "max_tool_vertical_error": 8.951979947807797e-16,
+  "dynamic_control_error_rad": 0.007588151415278133,
+  "dynamic_constraint_error_rad": 4.421561662903972e-05,
+  "status": "PASS"
+}

@@ -1,0 +1,18 @@
+# Goal
+string object_uuid
+string group_name
+string end_effector_name
+float64 approach_distance_m
+float64 lift_distance_m
+float64 velocity_scale
+float64 acceleration_scale
+---
+# Result
+bool success
+string failure_stage
+string message
+float64 object_lift_m
+---
+# Feedback
+string stage
+float32 progress

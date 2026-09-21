@@ -1,0 +1,233 @@
+<mujoco model="dobot_magician_validation">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.001" integrator="implicitfast" gravity="0 0 -9.81"
+          solver="Newton" iterations="100" tolerance="1e-10">
+    <flag contact="enable"/>
+  </option>
+
+  <visual>
+    <headlight ambient="0.35 0.35 0.35" diffuse="0.75 0.75 0.75" specular="0.25 0.25 0.25"/>
+    <rgba haze="0.15 0.18 0.22 1"/>
+    <global azimuth="135" elevation="-22" offwidth="1024" offheight="768"/>
+  </visual>
+
+  <statistic center="0 0 0.18" extent="0.55"/>
+
+  <default>
+    <joint limited="true" damping="0.08" armature="0.002" frictionloss="0.01"/>
+    <geom friction="0.8 0.02 0.002" solref="0.008 1" solimp="0.9 0.95 0.001"
+          contype="1" conaffinity="2"/>
+    <position ctrllimited="true" kp="250" kv="14"/>
+    <default class="collision">
+      <geom group="3" rgba="0 0 0 0"/>
+    </default>
+    <default class="cad_visual">
+      <geom contype="0" conaffinity="0" group="2" mass="0.000001"/>
+    </default>
+  </default>
+
+  <asset>
+    <texture name="floor_tex" type="2d" builtin="checker" rgb1="0.20 0.23 0.27"
+             rgb2="0.12 0.14 0.17" width="512" height="512"/>
+    <material name="floor_mat" texture="floor_tex" texrepeat="3 3" texuniform="true"
+              reflectance="0.12"/>
+    <material name="base_mat" rgba="0.12 0.16 0.20 1"/>
+    <material name="arm_mat" rgba="0.92 0.94 0.96 1"/>
+    <material name="joint_mat" rgba="0.08 0.58 0.86 1"/>
+    <material name="gripper_mat" rgba="0.18 0.21 0.25 1"/>
+    <material name="table_mat" rgba="0.48 0.30 0.16 1"/>
+    <material name="object_mat" rgba="0.95 0.55 0.08 1"/>
+    <material name="cad_dark" rgba="0.180392 0.180392 0.180392 1"/>
+    <material name="cad_blueblack" rgba="0.180392 0.2 0.211765 1"/>
+    <material name="cad_green" rgba="0.541176 0.878431 0.2 1"/>
+    <material name="cad_silver" rgba="0.721569 0.741176 0.709804 1"/>
+    <material name="cad_light" rgba="0.8 0.8 0.8 1"/>
+    <material name="cad_mid" rgba="0.341176 0.34902 0.337255 1"/>
+    <material name="cad_gripper" rgba="0.329412 0.341176 0.32549 1"/>
+
+    <mesh name="mesh_base_dark" file="meshes/magicianBase_46_46_46.obj"/>
+    <mesh name="mesh_base_blueblack" file="meshes/magicianBase_46_51_54.obj"/>
+    <mesh name="mesh_base_green" file="meshes/magicianBase_138_224_51.obj"/>
+    <mesh name="mesh_base_silver" file="meshes/magicianBase_184_189_181.obj"/>
+    <mesh name="mesh_base_light" file="meshes/magicianBase_204_204_204.obj"/>
+    <mesh name="mesh_link1_dark" file="meshes/magicianLink1_46_46_46.obj"/>
+    <mesh name="mesh_link1_light" file="meshes/magicianLink1_204_204_204.obj"/>
+    <mesh name="mesh_link2_dark" file="meshes/magicianLink2_46_46_46.obj"/>
+    <mesh name="mesh_link2_mid" file="meshes/magicianLink2_87_89_86.obj"/>
+    <mesh name="mesh_link2_light" file="meshes/magicianLink2_204_204_204.obj"/>
+    <mesh name="mesh_link3_dark" file="meshes/magicianLink3_46_46_46.obj"/>
+    <mesh name="mesh_link3_mid" file="meshes/magicianLink3_87_89_86.obj"/>
+    <mesh name="mesh_link3_light" file="meshes/magicianLink3_204_204_204.obj"/>
+    <mesh name="mesh_link4_dark" file="meshes/magicianLink4_46_46_46.obj"/>
+    <mesh name="mesh_gripper_core_dark" file="meshes/gripper_core_46_46_46.obj"/>
+    <mesh name="mesh_gripper_core_mid" file="meshes/gripper_core_84_87_83.obj"/>
+    <mesh name="mesh_jaw_left_dark" file="meshes/jaw_left_46_46_46.obj"/>
+    <mesh name="mesh_jaw_left_mid" file="meshes/jaw_left_84_87_83.obj"/>
+    <mesh name="mesh_jaw_right_dark" file="meshes/jaw_right_46_46_46.obj"/>
+  </asset>
+
+  <worldbody>
+    <light name="key" pos="0.2 -0.35 0.8" dir="-0.2 0.3 -1" directional="true"/>
+    <light name="fill" pos="-0.4 0.2 0.55" dir="0.5 -0.2 -0.7" directional="true" diffuse="0.35 0.4 0.5"/>
+    <geom name="floor" type="plane" size="1 1 0.05" material="floor_mat"
+          contype="2" conaffinity="1"/>
+    <camera name="overview" mode="targetbody" target="shoulder" pos="0.52 -0.52 0.42"/>
+    <!-- Fixed eye-to-hand RGB-D camera looking at the tabletop workspace.
+         The side-offset view reduces arm/gripper occlusion during a grasp. -->
+    <camera name="d435i_sim" pos="0.55 0 0.50"
+            xyaxes="0 1 0
+                    -0.817482433 0 0.575953532"
+            fovy="43.2"/>
+
+    <!-- A compact tabletop and a free object for deterministic pick tests. -->
+    <geom name="pick_table" type="box" pos="0.23 0 0.025" size="0.16 0.22 0.025"
+          material="table_mat" contype="2" conaffinity="1" friction="1.0 0.02 0.002"/>
+    <body name="pick_object" pos="0.22 0 0.076">
+      <freejoint name="pick_object_free"/>
+      <geom name="pick_object_geom" type="cylinder" size="0.012 0.025"
+            material="object_mat" mass="0.035" friction="1.2 0.03 0.003"
+            contype="3" conaffinity="3"/>
+      <site name="pick_object_site" type="sphere" size="0.004" rgba="1 1 0.1 1"/>
+    </body>
+
+    <body name="target_marker" mocap="true" pos="0.24 0 0.20">
+      <geom name="target_geom" type="sphere" size="0.012" rgba="0.95 0.16 0.12 0.75"
+            contype="0" conaffinity="0" mass="0.001"/>
+    </body>
+
+    <body name="base" pos="0 0 0">
+      <geom name="base_foot" class="collision" type="cylinder" pos="0 0 0.040" size="0.072 0.040"
+            material="base_mat" mass="1.20"/>
+      <geom name="base_neck" class="collision" type="cylinder" pos="0 0 0.105" size="0.045 0.030"
+            material="joint_mat" mass="0.30"/>
+      <geom name="visual_base_dark" class="cad_visual" type="mesh" mesh="mesh_base_dark"
+            pos="0 0 0.131305" material="cad_dark"/>
+      <geom name="visual_base_blueblack" class="cad_visual" type="mesh" mesh="mesh_base_blueblack"
+            pos="0 0 0.131305" material="cad_blueblack"/>
+      <geom name="visual_base_green" class="cad_visual" type="mesh" mesh="mesh_base_green"
+            pos="0 0 0.131305" material="cad_green"/>
+      <geom name="visual_base_silver" class="cad_visual" type="mesh" mesh="mesh_base_silver"
+            pos="0 0 0.131305" material="cad_silver"/>
+      <geom name="visual_base_light" class="cad_visual" type="mesh" mesh="mesh_base_light"
+            pos="0 0 0.131305" material="cad_light"/>
+
+      <!-- The shoulder origin matches magician_joint_base: z = 0.131305 m. -->
+      <body name="shoulder" pos="0 0 0.131305">
+        <joint name="joint_1" type="hinge" axis="0 0 1" range="-2.181661565 2.181661565"/>
+        <geom name="shoulder_housing" class="collision" type="cylinder" size="0.039 0.034"
+              material="joint_mat" mass="0.36"/>
+        <geom name="visual_link1_dark" class="cad_visual" type="mesh" mesh="mesh_link1_dark"
+              material="cad_dark"/>
+        <geom name="visual_link1_light" class="cad_visual" type="mesh" mesh="mesh_link1_light"
+              material="cad_light"/>
+        <site name="base_pivot_site" type="sphere" size="0.004" rgba="1 0.8 0.1 1"/>
+
+        <body name="rear_arm" pos="0 0 0">
+          <joint name="joint_2" type="hinge" axis="0 1 0" range="-0.087266463 1.570796327"/>
+          <geom name="rear_arm_link" class="collision" type="capsule" fromto="0 0 0 0 0 0.135" size="0.020"
+                material="arm_mat" mass="0.24"/>
+          <geom name="visual_link2_dark" class="cad_visual" type="mesh" mesh="mesh_link2_dark"
+                euler="0 -0.349065850399 0" material="cad_dark"/>
+          <geom name="visual_link2_mid" class="cad_visual" type="mesh" mesh="mesh_link2_mid"
+                euler="0 -0.349065850399 0" material="cad_mid"/>
+          <geom name="visual_link2_light" class="cad_visual" type="mesh" mesh="mesh_link2_light"
+                euler="0 -0.349065850399 0" material="cad_light"/>
+
+          <body name="elbow" pos="0 0 0.135">
+            <!-- This is theta3 - theta2, not the raw firmware theta3. -->
+            <joint name="joint_3_relative" type="hinge" axis="0 1 0"
+                   range="-1.832595715 1.308996939"/>
+            <geom name="elbow_housing" class="collision" type="sphere" size="0.027" material="joint_mat" mass="0.09"/>
+            <geom name="forearm_link" class="collision" type="capsule" fromto="0 0 0 0.147 0 0" size="0.018"
+                  material="arm_mat" mass="0.20"/>
+            <geom name="visual_link3_dark" class="cad_visual" type="mesh" mesh="mesh_link3_dark"
+                  pos="0.01645236136 0 -0.133993730472" euler="0 -0.471238898038 0"
+                  material="cad_dark"/>
+            <geom name="visual_link3_mid" class="cad_visual" type="mesh" mesh="mesh_link3_mid"
+                  pos="0.01645236136 0 -0.133993730472" euler="0 -0.471238898038 0"
+                  material="cad_mid"/>
+            <geom name="visual_link3_light" class="cad_visual" type="mesh" mesh="mesh_link3_light"
+                  pos="0.01645236136 0 -0.133993730472" euler="0 -0.471238898038 0"
+                  material="cad_light"/>
+            <site name="wrist_site" pos="0.147 0 0" type="sphere" size="0.005"
+                  rgba="0.1 0.95 0.3 1"/>
+
+            <body name="wrist_pitch_comp_1" pos="0.147 0 0">
+              <joint name="joint_mimic_1" type="hinge" axis="0 1 0"
+                     range="-1.570796327 0.087266463"/>
+              <geom name="mimic_1_inertia" type="sphere" size="0.003" mass="0.001"
+                    rgba="0 0 0 0" contype="0" conaffinity="0"/>
+              <body name="wrist_pitch_comp_2">
+                <joint name="joint_mimic_2" type="hinge" axis="0 1 0"
+                       range="-1.308996939 1.832595715"/>
+                <geom name="wrist_link" class="collision" type="capsule" fromto="0 0 0 0.060 0 0" size="0.016"
+                      material="arm_mat" mass="0.08"/>
+                <geom name="visual_link4_dark" class="cad_visual" type="mesh" mesh="mesh_link4_dark"
+                      pos="-0.177150678405 0 -0.058595107268" material="cad_dark"/>
+
+                <body name="flange" pos="0.060 0 0">
+                  <joint name="joint_4" type="hinge" axis="0 0 1"
+                         range="-2.617993878 2.617993878"/>
+                  <geom name="flange_housing" class="collision" type="cylinder" pos="0 0 -0.014" size="0.030 0.018"
+                        material="joint_mat" mass="0.10"/>
+                  <site name="flange_site" type="sphere" size="0.004" rgba="0.9 0.6 0.1 1"/>
+                  <geom name="gripper_core" class="collision" type="box" pos="0 0 -0.038" size="0.027 0.021 0.022"
+                        material="gripper_mat" mass="0.12"/>
+                  <geom name="visual_gripper_core_dark" class="cad_visual" type="mesh"
+                        mesh="mesh_gripper_core_dark" pos="-0.000080678405 0 -0.027843407268"
+                        material="cad_dark"/>
+                  <geom name="visual_gripper_core_mid" class="cad_visual" type="mesh"
+                        mesh="mesh_gripper_core_mid" pos="-0.000080678405 0 -0.027843407268"
+                        material="cad_gripper"/>
+                  <site name="tcp_site" pos="0 0 -0.104843272462" type="sphere" size="0.006"
+                        rgba="0.95 0.15 0.12 1"/>
+
+                  <body name="left_jaw">
+                    <joint name="gripper_left" type="slide" axis="0 1 0" range="0 0.0135"/>
+                    <geom name="left_jaw_geom" class="collision" type="box"
+                          pos="0 0.0135 -0.077" size="0.010 0.007 0.027"
+                          material="arm_mat" mass="0.025"/>
+                    <geom name="visual_jaw_left_dark" class="cad_visual" type="mesh"
+                          mesh="mesh_jaw_left_dark" pos="-0.000080678405 -0.0009 -0.027843407268"
+                          material="cad_dark"/>
+                    <geom name="visual_jaw_left_mid" class="cad_visual" type="mesh"
+                          mesh="mesh_jaw_left_mid" pos="-0.000080678405 -0.0009 -0.027843407268"
+                          material="cad_gripper"/>
+                  </body>
+                  <body name="right_jaw">
+                    <joint name="gripper_right" type="slide" axis="0 1 0" range="-0.0135 0"/>
+                    <geom name="right_jaw_geom" class="collision" type="box"
+                          pos="0 -0.0135 -0.077" size="0.010 0.007 0.027"
+                          material="arm_mat" mass="0.025"/>
+                    <geom name="visual_jaw_right_dark" class="cad_visual" type="mesh"
+                          mesh="mesh_jaw_right_dark" pos="-0.000080678405 0.0009 -0.027843407268"
+                          material="cad_dark"/>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <equality>
+    <!-- joint1 = poly(joint2): exact parallelogram compensation. -->
+    <joint name="eq_mimic_1" joint1="joint_mimic_1" joint2="joint_2"
+           polycoef="0 -1 0 0 0" solref="0.001 1"/>
+    <joint name="eq_mimic_2" joint1="joint_mimic_2" joint2="joint_3_relative"
+           polycoef="0 -1 0 0 0" solref="0.001 1"/>
+    <joint name="eq_gripper" joint1="gripper_right" joint2="gripper_left"
+           polycoef="0 -1 0 0 0" solref="0.001 1"/>
+  </equality>
+
+  <actuator>
+    <position name="act_joint_1" joint="joint_1" ctrlrange="-2.181661565 2.181661565"/>
+    <position name="act_joint_2" joint="joint_2" ctrlrange="-0.087266463 1.570796327"/>
+    <position name="act_joint_3_relative" joint="joint_3_relative"
+              ctrlrange="-1.832595715 1.308996939"/>
+    <position name="act_joint_4" joint="joint_4" ctrlrange="-2.617993878 2.617993878"/>
+    <position name="act_gripper" joint="gripper_left" ctrlrange="0 0.0135" kp="300" kv="12"/>
+  </actuator>
+</mujoco>

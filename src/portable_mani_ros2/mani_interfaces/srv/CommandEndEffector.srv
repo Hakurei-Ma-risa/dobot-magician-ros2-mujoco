@@ -1,0 +1,16 @@
+uint8 OPEN=0
+uint8 CLOSE=1
+uint8 SET_POSITION=2
+uint8 ENABLE=3
+uint8 DISABLE=4
+
+string end_effector_name
+uint8 command
+float64 position_m
+float64 force_n
+bool hold
+---
+bool success
+string message
+float64 achieved_position_m
+

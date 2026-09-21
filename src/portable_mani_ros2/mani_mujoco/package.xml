@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mani_mujoco</name>
+  <version>0.1.0</version>
+  <description>MuJoCo ROS 2 backend for Portable Mani.</description>
+  <maintainer email="hongjin@example.com">hongjin</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+  <depend>geometry_msgs</depend>
+  <depend>mani_core</depend>
+  <depend>mani_dobot</depend>
+  <depend>mani_interfaces</depend>
+  <exec_depend>mani_perception</exec_depend>
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf2_ros</depend>
+  <exec_depend>ros2launch</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
