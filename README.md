@@ -38,7 +38,7 @@ D435i 的 RGB-D 数据通路。
 D435i RGB-D -------------->| mani_perception   |----> /mani/scene_objects
                            +-------------------+
                                       |
-Policy / YOLO / ACT / RL ---> mani_interfaces <--- mani_tasks
+Policy / YOLO / ACT / RL / Gemini ER -> mani_interfaces <- mani_tasks
                                       |
                          +------------+------------+
                          |                         |
@@ -68,7 +68,8 @@ Portable Mani 的上层接口使用米、弧度、`PoseStamped` 和 capability m
 │       ├── mani_tasks/            # 通用抓取任务状态机
 │       ├── mani_perception/       # D435i 与 RGB-D 定位接口
 │       ├── mani_dobot/            # Dobot adapter 与硬件 bridge
-│       └── mani_mujoco/           # 与真机端点一致的 ROS 2 仿真后端
+│       ├── mani_mujoco/           # 与真机端点一致的 ROS 2 仿真后端
+│       └── mani_gemini/           # Gemini Robotics ER 仿真提议适配器
 └── README.md
 ```
 
@@ -79,6 +80,7 @@ Portable Mani 的上层接口使用米、弧度、`PoseStamped` 和 capability m
 - [Portable Mani 总览](src/portable_mani_ros2/README.md)
 - [Dobot adapter](src/portable_mani_ros2/mani_dobot/README.md)
 - [MuJoCo ROS 后端](src/portable_mani_ros2/mani_mujoco/README.md)
+- [Gemini Robotics ER 仿真适配器](src/portable_mani_ros2/mani_gemini/README.md)
 - [D435i 感知](src/portable_mani_ros2/mani_perception/README.md)
 - [上游 Magician ROS 2 文档](src/magician_ros2/README.md)
 
@@ -135,6 +137,36 @@ python -m pip install -e mujoco_sim
 python -m pip install -e src/portable_mani_ros2/mani_core
 python -m pip install -e src/portable_mani_ros2/mani_dobot
 ```
+
+## Gemini Robotics ER（仅仿真提议模式）
+
+Gemini Robotics ER 2 是视觉-语言的具身推理模型，适合输出目标点、框和任务
+规划；它不是关节控制器。当前仓库的 `mani_gemini` 只发送一帧 MuJoCo RGB
+图像并验证结构化提议，不发布 ROS 运动命令，也不触碰真机。官方文档：
+[Robotics overview](https://ai.google.dev/gemini-api/docs/robotics-overview)、
+[spatial reasoning](https://ai.google.dev/gemini-api/docs/robotics-spatial)。
+
+先安装可选客户端并设置 API key（不要把 key 写入仓库）：
+
+```bash
+conda activate dobot-mujoco
+python -m pip install google-genai pillow
+export GEMINI_API_KEY='...'
+python -m pip install -e src/portable_mani_ros2/mani_gemini
+```
+
+生成一张 MuJoCo 快照后运行单帧探针：
+
+```bash
+python mujoco_sim/scripts/render_snapshot.py --output mujoco_sim/artifacts/magician_mujoco.png
+python -m mani_gemini.probe \
+  --image mujoco_sim/artifacts/magician_mujoco.png \
+  --task 'find the card and propose a safe center point'
+```
+
+ER 的坐标是归一化 `[y, x]`、范围 `0..1000`；探针会转换为图像像素，但不会把
+图像坐标直接当成机械臂坐标。下一步才是用深度、CameraInfo 和静态 TF 投影到
+`/mani/scene_objects`，通过安全门控后调用 `/mani/pick_object`。
 
 ## MuJoCo 验证
 
