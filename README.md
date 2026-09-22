@@ -155,18 +155,41 @@ export GEMINI_API_KEY='...'
 python -m pip install -e src/portable_mani_ros2/mani_gemini
 ```
 
-生成一张 MuJoCo 快照后运行单帧探针：
+生成一张 MuJoCo 快照后运行单帧探针。当前快照的抓取物是黄色圆柱；红球只是
+目标标记：
 
 ```bash
 python mujoco_sim/scripts/render_snapshot.py --output mujoco_sim/artifacts/magician_mujoco.png
 python -m mani_gemini.probe \
   --image mujoco_sim/artifacts/magician_mujoco.png \
-  --task 'find the card and propose a safe center point'
+  --task 'locate the yellow cylinder and propose a safe center point'
 ```
 
-ER 的坐标是归一化 `[y, x]`、范围 `0..1000`；探针会转换为图像像素，但不会把
-图像坐标直接当成机械臂坐标。下一步才是用深度、CameraInfo 和静态 TF 投影到
-`/mani/scene_objects`，通过安全门控后调用 `/mani/pick_object`。
+实时 ROS 仿真接入使用 Python 3.10 venv 和 MuJoCo 的 RGB-D 相机：
+
+```bash
+source /opt/ros/humble/setup.bash
+source .venv_ros_mujoco/bin/activate
+python -m pip install google-genai
+python -m colcon build --symlink-install \
+  --packages-select mani_perception mani_mujoco mani_gemini
+source install/setup.bash
+ros2 launch mani_mujoco dobot_mujoco.launch.py \
+  viewer:=false publish_camera:=true publish_perfect_detections:=false \
+  localizer_support_anchor:=bbox_bottom camera_width:=640 camera_height:=480
+```
+
+另一个同样 source 了 ROS、venv、`install/setup.bash` 的终端：
+
+```bash
+export GEMINI_API_KEY='...'
+ros2 run mani_gemini gemini_er_sim_probe
+```
+
+ER 的坐标是归一化 `[y, x]`、范围 `0..1000`。实时探针通过现有深度、
+CameraInfo 和静态 TF 投影到 `/mani/scene_objects`，并对比仿真真值报告定位误差。
+一次 640×480 静态测试的定位误差为 `0.71 mm`；这不是跨场景精度保证。
+本阶段只测试识别和 3-D 定位，尚未调用 `/mani/pick_object`。
 
 ## MuJoCo 验证
 

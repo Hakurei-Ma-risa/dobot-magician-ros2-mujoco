@@ -3,6 +3,7 @@
 from .er_client import (
     ERProposal,
     build_prompt,
+    normalized_bbox_to_xywh,
     normalized_yx_to_pixel,
     parse_proposal,
 )
@@ -10,6 +11,7 @@ from .er_client import (
 __all__ = [
     "ERProposal",
     "build_prompt",
+    "normalized_bbox_to_xywh",
     "normalized_yx_to_pixel",
     "parse_proposal",
 ]

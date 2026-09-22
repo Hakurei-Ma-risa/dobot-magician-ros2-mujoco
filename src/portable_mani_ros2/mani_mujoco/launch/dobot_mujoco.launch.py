@@ -10,6 +10,8 @@ def generate_launch_description() -> LaunchDescription:
         [
             DeclareLaunchArgument("viewer", default_value="false"),
             DeclareLaunchArgument("publish_camera", default_value="true"),
+            DeclareLaunchArgument("publish_perfect_detections", default_value="true"),
+            DeclareLaunchArgument("localizer_support_anchor", default_value="center"),
             DeclareLaunchArgument("camera_rate_hz", default_value="10.0"),
             DeclareLaunchArgument("camera_width", default_value="320"),
             DeclareLaunchArgument("camera_height", default_value="240"),
@@ -26,6 +28,10 @@ def generate_launch_description() -> LaunchDescription:
                         ),
                         "publish_camera": ParameterValue(
                             LaunchConfiguration("publish_camera"), value_type=bool
+                        ),
+                        "publish_perfect_detections": ParameterValue(
+                            LaunchConfiguration("publish_perfect_detections"),
+                            value_type=bool,
                         ),
                         "camera_rate_hz": ParameterValue(
                             LaunchConfiguration("camera_rate_hz"), value_type=float
@@ -44,6 +50,13 @@ def generate_launch_description() -> LaunchDescription:
                 executable="rgbd_localizer",
                 name="mani_rgbd_localizer",
                 output="screen",
+                parameters=[
+                    {
+                        "support_anchor": LaunchConfiguration(
+                            "localizer_support_anchor"
+                        )
+                    }
+                ],
             ),
             Node(
                 package="mani_tasks",

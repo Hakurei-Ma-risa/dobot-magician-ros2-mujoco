@@ -27,3 +27,38 @@ def test_localize_bbox_uses_support_plane_for_object_center() -> None:
         object_height_m=0.10,
     )
     np.testing.assert_allclose(position, [0.05, 0.0, 0.5], atol=1e-9)
+
+
+def test_localize_bbox_can_anchor_visible_bottom_to_table() -> None:
+    intrinsics = PinholeIntrinsics(fx=100.0, fy=100.0, cx=50.0, cy=50.0)
+    position = localize_bbox(
+        (69, 25, 3, 6),
+        0.9,
+        intrinsics,
+        np.array([0.0, 0.0, 1.0]),
+        np.diag([1.0, -1.0, -1.0]),
+        support_plane_z_m=0.0,
+        object_height_m=0.10,
+        support_anchor="bbox_bottom",
+    )
+    np.testing.assert_allclose(position, [0.20, 0.20, 0.05], atol=1e-9)
+
+
+def test_bottom_anchor_corrects_near_rim_of_cylinder() -> None:
+    intrinsics = PinholeIntrinsics(fx=100.0, fy=100.0, cx=50.0, cy=50.0)
+    position = localize_bbox(
+        (69, 25, 3, 6),
+        0.9,
+        intrinsics,
+        np.array([0.30, 0.0, 1.0]),
+        np.diag([1.0, -1.0, -1.0]),
+        support_plane_z_m=0.0,
+        object_height_m=0.10,
+        support_anchor="bbox_bottom",
+        support_footprint_radius_m=0.01,
+    )
+    direction = np.array([0.20, 0.20]) / np.sqrt(0.20**2 + 0.20**2)
+    np.testing.assert_allclose(
+        position, [0.50 + direction[0] * 0.01, 0.20 + direction[1] * 0.01, 0.05],
+        atol=1e-9,
+    )

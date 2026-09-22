@@ -33,7 +33,7 @@ Task: {task}
 
 Inspect the image and return ONLY valid JSON (no Markdown and no prose) using this schema:
 {{
-  \"label\": \"object to manipulate\",
+  \"label\": \"specific visible object name\",
   \"point_yx_norm\": [y, x],
   \"bbox_yxyx_norm\": [y_min, x_min, y_max, x_max],
   \"confidence\": 0.0,
@@ -41,7 +41,11 @@ Inspect the image and return ONLY valid JSON (no Markdown and no prose) using th
 }}
 
 Coordinates must be integers or floats in [0, 1000], in [y, x] order, normalized to
-the image. If no safe target is visible, return {{\"label\": \"none\"}}.
+the image. If the target is not visible at all, return {{\"label\": \"none\"}}.
+If it is partly hidden by the gripper, use the visible part to locate it.
+This is an object-location request; do not judge grasp safety from the image.
+Replace every schema placeholder with observations from this image. Name the
+actual target in the label field; do not repeat "specific visible object name".
 Do not output joint angles, raw qpos, or a real-robot command."""
 
 
@@ -58,6 +62,21 @@ def normalized_yx_to_pixel(point_yx_norm: Sequence[float], width: int, height: i
     x = min(width - 1, max(0, round(x_norm / 1000 * width)))
     y = min(height - 1, max(0, round(y_norm / 1000 * height)))
     return int(x), int(y)
+
+
+def normalized_bbox_to_xywh(
+    bbox_yxyx_norm: Sequence[float], width: int, height: int
+) -> tuple[int, int, int, int]:
+    """Convert normalized ``[y0, x0, y1, x1]`` to a bounded pixel ROI."""
+
+    if len(bbox_yxyx_norm) != 4:
+        raise ValueError("bbox_yxyx_norm must contain [y0, x0, y1, x1]")
+    y0, x0, y1, x1 = (float(value) for value in bbox_yxyx_norm)
+    if not (0 <= y0 < y1 <= 1000 and 0 <= x0 < x1 <= 1000):
+        raise ValueError("bbox must have ordered coordinates in [0, 1000]")
+    px0, py0 = normalized_yx_to_pixel((y0, x0), width, height)
+    px1, py1 = normalized_yx_to_pixel((y1, x1), width, height)
+    return px0, py0, max(1, px1 - px0), max(1, py1 - py0)
 
 
 def _json_payload(text: str) -> Mapping[str, Any]:

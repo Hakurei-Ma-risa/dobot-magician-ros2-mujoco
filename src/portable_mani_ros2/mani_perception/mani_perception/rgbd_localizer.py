@@ -97,6 +97,8 @@ def localize_bbox(
     *,
     support_plane_z_m: float | None,
     object_height_m: float,
+    support_anchor: str = "center",
+    support_footprint_radius_m: float = 0.0,
 ) -> np.ndarray:
     x, y, width, height = bbox_xywh
     u = x + (width - 1) * 0.5
@@ -116,15 +118,36 @@ def localize_bbox(
     release_height = support_plane_z_m + object_height_m + 0.040
     if measured_target[2] > release_height:
         return measured_target
-    ray_camera = optical_point(u, v, 1.0, intrinsics)
+    if support_anchor == "bbox_bottom":
+        # If the upper object is hidden by the tool, the visible ROI center is
+        # below the physical center. Its bottom edge approximates the contact
+        # point on the known tabletop instead.
+        ray_v = y + height - 1
+        ray_plane_z = support_plane_z_m
+    elif support_anchor == "center":
+        ray_v = v
+        ray_plane_z = center_z
+    else:
+        raise ValueError(f"unknown support anchor: {support_anchor}")
+    ray_camera = optical_point(u, ray_v, 1.0, intrinsics)
     ray_target = rotation_target_from_camera @ ray_camera
     if abs(ray_target[2]) < 1e-9:
         return measured_target
-    scale = (center_z - translation_target_from_camera[2]) / ray_target[2]
+    scale = (ray_plane_z - translation_target_from_camera[2]) / ray_target[2]
     if scale <= 0.0:
         return measured_target
     center = translation_target_from_camera + scale * ray_target
     center[2] = center_z
+    if support_anchor == "bbox_bottom" and support_footprint_radius_m > 0.0:
+        # The lowest visible pixel is typically the near rim of a tabletop
+        # footprint. Move one footprint radius away from the camera to recover
+        # the object's center in the support plane.
+        away_from_camera = center[:2] - translation_target_from_camera[:2]
+        distance = float(np.linalg.norm(away_from_camera))
+        if distance > 1e-9:
+            center[:2] += (
+                away_from_camera / distance * support_footprint_radius_m
+            )
     return center
 
 
@@ -144,6 +167,7 @@ class RgbdLocalizer(Node):
         self.declare_parameter("target_frame", "magician_base_link")
         self.declare_parameter("support_plane_z_m", 0.05)
         self.declare_parameter("use_support_plane", True)
+        self.declare_parameter("support_anchor", "center")
 
         self._lock = Lock()
         self._depth: Image | None = None
@@ -270,6 +294,13 @@ class RgbdLocalizer(Node):
                 rotation,
                 support_plane_z_m=support_plane,
                 object_height_m=float(detection.size.z),
+                support_anchor=str(self.get_parameter("support_anchor").value),
+                support_footprint_radius_m=(
+                    0.5 * min(float(detection.size.x), float(detection.size.y))
+                    if str(self.get_parameter("support_anchor").value)
+                    == "bbox_bottom"
+                    else 0.0
+                ),
             )
             item = SceneObject()
             item.header = output.header

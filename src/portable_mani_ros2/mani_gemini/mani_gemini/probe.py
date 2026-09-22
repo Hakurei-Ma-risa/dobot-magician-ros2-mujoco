@@ -7,7 +7,8 @@ import json
 import os
 from pathlib import Path
 
-from .er_client import build_prompt, normalized_yx_to_pixel, parse_proposal
+from .api import query_image
+from .er_client import build_prompt, normalized_yx_to_pixel
 
 
 def _parse_args() -> argparse.Namespace:
@@ -32,23 +33,14 @@ def main() -> int:
     if not api_key:
         raise SystemExit("GEMINI_API_KEY is not set; use --dry-run to inspect the request")
     try:
-        from google import genai
-    except ImportError as exc:
-        raise SystemExit("install the optional client with: python -m pip install google-genai pillow") from exc
-
-    client = genai.Client(api_key=api_key)
-    uploaded = client.files.upload(file=str(args.image))
-    interaction = client.interactions.create(
-        model=args.model,
-        input=[
-            {"type": "image", "uri": uploaded.uri, "mime_type": uploaded.mime_type},
-            {"type": "text", "text": prompt},
-        ],
-    )
-    raw = getattr(interaction, "output_text", None)
-    if not raw:
-        raise SystemExit("Gemini returned no output_text")
-    proposal = parse_proposal(raw)
+        proposal = query_image(
+            args.image, args.task, model=args.model, api_key=api_key
+        )
+    except Exception as exc:
+        # API exceptions may include request metadata. Keep credentials out of
+        # terminal logs, issue reports, and copied stack traces.
+        status = getattr(exc, "code", "unknown")
+        raise SystemExit(f"Gemini API failed: {type(exc).__name__} (status {status})") from None
     result = {"model": args.model, "proposal": proposal.to_dict()}
 
     if proposal.point_yx_norm is not None:

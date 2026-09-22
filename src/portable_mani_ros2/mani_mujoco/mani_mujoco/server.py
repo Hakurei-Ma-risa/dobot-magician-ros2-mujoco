@@ -41,6 +41,7 @@ class MujocoServer(Node):
         self._lock = RLock()
         self.declare_parameter("viewer", False)
         self.declare_parameter("publish_camera", True)
+        self.declare_parameter("publish_perfect_detections", True)
         self.declare_parameter("camera_rate_hz", 10.0)
         self.declare_parameter("camera_width", 320)
         self.declare_parameter("camera_height", 240)
@@ -77,8 +78,12 @@ class MujocoServer(Node):
             if camera_enabled
             else self.create_publisher(SceneObjectArray, "/mani/scene_objects", 10)
         )
-        self._detections_pub = self.create_publisher(
-            SceneObjectArray, "/mani/perception/detections_2d", 10
+        self._detections_pub = (
+            self.create_publisher(
+                SceneObjectArray, "/mani/perception/detections_2d", 10
+            )
+            if bool(self.get_parameter("publish_perfect_detections").value)
+            else None
         )
         self._tcp_pub = self.create_publisher(PoseStamped, "/mani/tcp_pose", 10)
         self._joints_pub = self.create_publisher(JointState, "/joint_states", 10)
@@ -412,7 +417,8 @@ class MujocoServer(Node):
         detections.header.stamp = stamp
         detections.header.frame_id = "camera_color_optical_frame"
         detections.objects = [] if detection is None else [detection]
-        self._detections_pub.publish(detections)
+        if self._detections_pub is not None:
+            self._detections_pub.publish(detections)
 
     def _goal_move(self, request: MoveToPose.Goal) -> GoalResponse:
         if request.group_name != "arm":
