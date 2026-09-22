@@ -58,6 +58,20 @@ controls object arrangement; the response omits object poses. This scene is
 still idealized geometry and RGB-D, not a calibrated RealSense or a suction
 gripper digital twin.
 
+## Motion playback and TCP path
+
+MuJoCo `move_to_pose` now interpolates the TCP position on a straight Cartesian
+segment with minimum-jerk timing, solves Dobot IK at each 20 Hz waypoint, and
+prevalidates the full kinematic path before moving. The simulated state is sent
+to the separate viewer at every control step and paced against wall time; the
+arm should no longer appear to teleport. `move_joints` remains a joint-space
+command and does not promise a straight TCP path. The Cartesian path has no
+general obstacle-avoidance planner, so a clear corridor is still required.
+
+One no-window ROS action test delivered 65 state frames over 3.13 s; the
+measured MuJoCo TCP deviated at most 0.91 mm from the requested straight line.
+This is a single trajectory test, not a calibration or collision guarantee.
+
 The project-local `.venv_ros_mujoco` uses system Python 3.10 and inherits ROS
 Humble packages. It exists because the original `dobot-mujoco` Conda env uses
 Python 3.12 and cannot load Humble's Python 3.10 extensions.

@@ -49,6 +49,34 @@ from ..kinematics import (
 )
 
 
+def cartesian_raw_waypoints(
+    start: Pose,
+    goal: Pose,
+    *,
+    seed_raw: ArrayLike,
+    duration_s: float,
+    rate_hz: float,
+) -> np.ndarray:
+    """Plan a straight TCP path with smooth timing and continuous IK branch."""
+    if start.frame_id != goal.frame_id:
+        raise ValueError("Cartesian path endpoints must use the same frame")
+    yaw_delta = float((goal.yaw - start.yaw + np.pi) % (2.0 * np.pi) - np.pi)
+    start_xyzyaw = np.r_[start.position, start.yaw]
+    goal_xyzyaw = np.r_[goal.position, start.yaw + yaw_delta]
+    samples = minimum_jerk(
+        start_xyzyaw, goal_xyzyaw, duration_s=duration_s, rate_hz=rate_hz
+    ).position
+    previous = np.asarray(seed_raw, dtype=np.float64)
+    raw_waypoints = []
+    for sample in samples[1:]:
+        pose = Pose.from_xyz_yaw(
+            *sample[:3], float(sample[3]), frame_id=start.frame_id
+        )
+        previous = inverse_tcp_pose(pose, seed_raw=previous)
+        raw_waypoints.append(previous)
+    return np.asarray(raw_waypoints, dtype=np.float64)
+
+
 @dataclass(frozen=True)
 class ClutterItem:
     body: str
@@ -347,27 +375,41 @@ class DobotMujocoBackend:
         try:
             self.safety.validate_pose(target, controlled_axes)
             current = self.state()
-            target_raw = inverse_tcp_pose(target, seed_raw=current.vendor_position)
+            raw_waypoints = cartesian_raw_waypoints(
+                current.tcp_pose,
+                target,
+                seed_raw=current.vendor_position,
+                duration_s=duration_s,
+                rate_hz=self.CONTROL_RATE_HZ,
+            )
         except (ValueError, SafetyViolation) as exc:
             return ExecutionResult(False, str(exc), self.state(), monotonic() - started)
-        result = self.move_joints(group, raw_to_model(target_raw), duration_s=duration_s)
-        if result.final_state is None:
-            return result
-        position_error = float(np.linalg.norm(result.final_state.tcp_pose.position - target.position))
+        try:
+            self._advance_raw_trajectory(raw_waypoints)
+            for _ in range(int(0.25 / self.model.opt.timestep)):
+                mujoco.mj_step(self.model, self.data)
+        except (ValueError, SafetyViolation, RuntimeError) as exc:
+            return ExecutionResult(False, str(exc), self.state(), monotonic() - started)
+        final_state = self.state()
+        target_raw = raw_waypoints[-1]
+        raw_error = float(np.max(np.abs(final_state.vendor_position - target_raw)))
+        position_error = float(np.linalg.norm(final_state.tcp_pose.position - target.position))
         yaw_error = abs(
             float(
-                (result.final_state.tcp_pose.yaw - target.yaw + np.pi)
+                (final_state.tcp_pose.yaw - target.yaw + np.pi)
                 % (2.0 * np.pi)
                 - np.pi
             )
         )
         return ExecutionResult(
-            success=result.success and position_error < 0.003 and yaw_error < np.deg2rad(1.0),
+            success=raw_error < np.deg2rad(2.0)
+            and position_error < 0.003
+            and yaw_error < np.deg2rad(1.0),
             message=(
                 f"position error {position_error * 1000.0:.2f} mm, "
                 f"yaw error {np.rad2deg(yaw_error):.2f} deg"
             ),
-            final_state=result.final_state,
+            final_state=final_state,
             duration_s=monotonic() - started,
         )
 

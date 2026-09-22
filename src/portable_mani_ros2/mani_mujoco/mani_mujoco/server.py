@@ -106,6 +106,8 @@ class MujocoServer(Node):
             if bool(self.get_parameter("publish_sim_state").value)
             else None
         )
+        if self._sim_state_pub is not None:
+            self._backend.set_step_callback(self._stream_sim_step)
 
         self._camera: MujocoRgbdCamera | None = None
         self._camera_thread: Thread | None = None
@@ -193,6 +195,16 @@ class MujocoServer(Node):
         if self._viewer is not None and self._viewer.is_running():
             self._viewer.sync()
             time.sleep(1.0 / self._backend.CONTROL_RATE_HZ)
+
+    def _stream_sim_step(self) -> None:
+        """Show every control sample while an action holds the backend lock."""
+        if self._sim_state_pub is not None:
+            state = Float64MultiArray()
+            state.data = self._backend.data.qpos.tolist()
+            self._sim_state_pub.publish(state)
+        if self._viewer is not None and self._viewer.is_running():
+            self._viewer.sync()
+        time.sleep(1.0 / self._backend.CONTROL_RATE_HZ)
 
     @staticmethod
     def _fill_pose(message, pose: Pose) -> None:

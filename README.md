@@ -283,6 +283,9 @@ python -m mani_dobot.pick_evaluator --trials 1 --viewer
 
 模型适合验证接口、运动学、控制周期和任务逻辑。质量、惯量、摩擦和执行器动态仍是
 近似值，不能当作高保真数字孪生直接做 sim-to-real 承诺。
+仿真的 `move_to_pose` 现在按 TCP 直线采样、逐点求逆解，并向独立 viewer
+实时发布每个 20 Hz 控制步；`move_joints` 仍是关节空间运动。该直线模式不包含
+通用避障规划，运动前仍须保证路径通畅。
 
 ## RealSense D435i
 
