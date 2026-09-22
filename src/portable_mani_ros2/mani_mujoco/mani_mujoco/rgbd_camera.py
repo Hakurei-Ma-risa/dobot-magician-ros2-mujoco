@@ -55,23 +55,29 @@ class MujocoRgbdCamera:
         width: int = 640,
         height: int = 480,
         target_geom: str = "pick_object_geom",
+        camera_name: str = CAMERA_NAME,
+        include_segmentation: bool = True,
     ) -> None:
         if width <= 0 or height <= 0:
             raise ValueError("camera width and height must be positive")
         self.model = model
+        self.camera_name = camera_name
+        self.include_segmentation = include_segmentation
         self.calibration = CameraCalibration.from_vertical_fov(
             width, height, self.FOVY_DEG
         )
         self._renderer = mujoco.Renderer(model, height=height, width=width)
-        self._target_geom_id = mujoco.mj_name2id(
-            model, mujoco.mjtObj.mjOBJ_GEOM, target_geom
-        )
-        if self._target_geom_id < 0:
-            self._renderer.close()
-            raise KeyError(f"unknown MuJoCo target geom: {target_geom}")
+        self._target_geom_id = None
+        if include_segmentation:
+            self._target_geom_id = mujoco.mj_name2id(
+                model, mujoco.mjtObj.mjOBJ_GEOM, target_geom
+            )
+            if self._target_geom_id < 0:
+                self._renderer.close()
+                raise KeyError(f"unknown MuJoCo target geom: {target_geom}")
 
     def render(self, data: mujoco.MjData) -> RgbdFrame:
-        self._renderer.update_scene(data, camera=self.CAMERA_NAME)
+        self._renderer.update_scene(data, camera=self.camera_name)
 
         self._renderer.disable_depth_rendering()
         self._renderer.disable_segmentation_rendering()
@@ -80,14 +86,16 @@ class MujocoRgbdCamera:
         self._renderer.enable_depth_rendering()
         depth_m = self._renderer.render().copy()
 
-        self._renderer.enable_segmentation_rendering()
-        segmentation = self._renderer.render()
-        mask = (
-            (segmentation[:, :, 0] == self._target_geom_id)
-            & (segmentation[:, :, 1] == int(mujoco.mjtObj.mjOBJ_GEOM))
-        )
-        bbox = self._bbox(mask)
-        self._renderer.disable_segmentation_rendering()
+        bbox = None
+        if self.include_segmentation:
+            self._renderer.enable_segmentation_rendering()
+            segmentation = self._renderer.render()
+            mask = (
+                (segmentation[:, :, 0] == self._target_geom_id)
+                & (segmentation[:, :, 1] == int(mujoco.mjtObj.mjOBJ_GEOM))
+            )
+            bbox = self._bbox(mask)
+            self._renderer.disable_segmentation_rendering()
         return RgbdFrame(rgb=rgb, depth_m=depth_m, object_bbox_xywh=bbox)
 
     def optical_pose(
@@ -100,7 +108,7 @@ class MujocoRgbdCamera:
         """
 
         camera_id = mujoco.mj_name2id(
-            self.model, mujoco.mjtObj.mjOBJ_CAMERA, self.CAMERA_NAME
+            self.model, mujoco.mjtObj.mjOBJ_CAMERA, self.camera_name
         )
         rotation_mujoco = data.cam_xmat[camera_id].reshape(3, 3)
         rotation_optical = rotation_mujoco @ np.diag([1.0, -1.0, -1.0])

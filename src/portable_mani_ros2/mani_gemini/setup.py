@@ -21,6 +21,7 @@ setup(
         "console_scripts": [
             "gemini_er_probe = mani_gemini.probe:main",
             "gemini_er_sim_probe = mani_gemini.ros_sim_probe:main",
+            "gemini_sim_chat = mani_gemini.sim_chat:main",
         ],
     },
 )

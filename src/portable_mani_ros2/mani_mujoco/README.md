@@ -35,12 +35,28 @@ rendering responsive on a single Python process. Consumers must use
 `CameraInfo` rather than hard-coded intrinsics, so the real D435i's 640x480
 stream is a drop-in replacement. Override with `camera_width:=640
 camera_height:=480` when image fidelity matters more than throughput.
-The RGB-D path uses EGL; the interactive viewer uses GLFW. On this machine the
-two context types are intentionally kept in separate run modes. Use the default
-`viewer:=false publish_camera:=true` for perception and closed-loop evaluation,
-or `viewer:=true publish_camera:=false` to inspect motion visually.
+The RGB-D path uses EGL; the interactive viewer uses GLFW. The clutter launch
+runs the viewer in a separate process, allowing both a live window and the
+camera stream. Use the default `viewer:=false publish_camera:=true` for legacy
+perception and closed-loop evaluation, or `viewer:=true publish_camera:=false`
+to inspect single-object motion visually.
 Visual-only mode feeds simulator ground truth directly to the pick server;
 only the default headless mode is a perception-driven benchmark.
+
+## Base-camera clutter scene
+
+`ros2 launch mani_mujoco dobot_clutter.launch.py` starts five randomized
+tabletop objects, a simulated base-mounted D435i RGB-D feed at 640x480,
+RGB-D localizer, top-down pick server, and separate MuJoCo viewer. The perfect
+detector and `/mani/sim/ground_truth` are disabled. The viewer alone receives
+`/mani/sim/qpos`; perception clients must not subscribe to it. The localizer
+projects the depth ROI into the robot base and estimates tabletop footprint
+midpoints. It falls back to the legacy single-point method when needed.
+
+`/mani/sim/reset_scene` requires `randomize: true` in clutter mode. The seed
+controls object arrangement; the response omits object poses. This scene is
+still idealized geometry and RGB-D, not a calibrated RealSense or a suction
+gripper digital twin.
 
 The project-local `.venv_ros_mujoco` uses system Python 3.10 and inherits ROS
 Humble packages. It exists because the original `dobot-mujoco` Conda env uses

@@ -37,6 +37,10 @@
     <material name="gripper_mat" rgba="0.18 0.21 0.25 1"/>
     <material name="table_mat" rgba="0.48 0.30 0.16 1"/>
     <material name="object_mat" rgba="0.95 0.55 0.08 1"/>
+    <material name="can_red_mat" rgba="0.85 0.12 0.10 1"/>
+    <material name="can_blue_mat" rgba="0.08 0.34 0.86 1"/>
+    <material name="block_green_mat" rgba="0.10 0.73 0.24 1"/>
+    <material name="block_purple_mat" rgba="0.56 0.22 0.75 1"/>
     <material name="cad_dark" rgba="0.180392 0.180392 0.180392 1"/>
     <material name="cad_blueblack" rgba="0.180392 0.2 0.211765 1"/>
     <material name="cad_green" rgba="0.541176 0.878431 0.2 1"/>
@@ -90,6 +94,33 @@
       <site name="pick_object_site" type="sphere" size="0.004" rgba="1 1 0.1 1"/>
     </body>
 
+    <!-- Clutter bodies start parked outside the workspace. The clutter-mode
+         backend moves them onto the table using collision-free seeded poses. -->
+    <body name="can_red" pos="1.50 -0.30 0.096">
+      <freejoint name="can_red_free"/>
+      <geom name="can_red_geom" type="cylinder" size="0.016 0.045"
+            material="can_red_mat" mass="0.035" friction="0.9 0.03 0.003"
+            contype="3" conaffinity="3"/>
+    </body>
+    <body name="can_blue" pos="1.55 -0.20 0.096">
+      <freejoint name="can_blue_free"/>
+      <geom name="can_blue_geom" type="cylinder" size="0.016 0.045"
+            material="can_blue_mat" mass="0.035" friction="0.9 0.03 0.003"
+            contype="3" conaffinity="3"/>
+    </body>
+    <body name="block_green" pos="1.60 -0.10 0.068">
+      <freejoint name="block_green_free"/>
+      <geom name="block_green_geom" type="box" size="0.018 0.018 0.018"
+            material="block_green_mat" mass="0.025" friction="1.0 0.03 0.003"
+            contype="3" conaffinity="3"/>
+    </body>
+    <body name="block_purple" pos="1.65 0.00 0.068">
+      <freejoint name="block_purple_free"/>
+      <geom name="block_purple_geom" type="box" size="0.018 0.018 0.018"
+            material="block_purple_mat" mass="0.025" friction="1.0 0.03 0.003"
+            contype="3" conaffinity="3"/>
+    </body>
+
     <body name="target_marker" mocap="true" pos="0.24 0 0.20">
       <geom name="target_geom" type="sphere" size="0.012" rgba="0.95 0.16 0.12 0.75"
             contype="0" conaffinity="0" mass="0.001"/>
@@ -110,6 +141,18 @@
             pos="0 0 0.131305" material="cad_silver"/>
       <geom name="visual_base_light" class="cad_visual" type="mesh" mesh="mesh_base_light"
             pos="0 0 0.131305" material="cad_light"/>
+
+      <!-- Base-mounted D435i stand-in, aimed at the tabletop center. Its
+           extrinsic is fixed in the robot base frame, not the world frame. -->
+      <body name="d435i_mount" pos="0.02 -0.10 0.28">
+        <geom name="d435i_mount_visual" type="box" pos="-0.04 -0.02 -0.04"
+              size="0.045 0.014 0.012"
+              rgba="0.17 0.20 0.23 1" contype="0" conaffinity="0" mass="0.01"/>
+        <camera name="d435i_base" pos="0 -0.01 0.02"
+                xyaxes="0.464006995 -0.885831535 0
+                        0.642785078 0.336696946 0.688086121"
+                fovy="43.2"/>
+      </body>
 
       <!-- The shoulder origin matches magician_joint_base: z = 0.131305 m. -->
       <body name="shoulder" pos="0 0 0.131305">

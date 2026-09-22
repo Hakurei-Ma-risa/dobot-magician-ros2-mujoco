@@ -153,16 +153,37 @@ def reset_pick_object(
 ) -> None:
     """Reset the free pick object above the tabletop with zero velocity."""
 
+    reset_free_object(
+        model,
+        data,
+        "pick_object_free",
+        position_xy,
+        half_height=PICK_OBJECT_HALF_HEIGHT,
+        yaw=yaw,
+    )
+
+
+def reset_free_object(
+    model: mujoco.MjModel,
+    data: mujoco.MjData,
+    joint_name: str,
+    position_xy: ArrayLike,
+    *,
+    half_height: float,
+    yaw: float = 0.0,
+) -> None:
+    """Set a tabletop free body pose and clear its velocity."""
+
     xy = np.asarray(position_xy, dtype=np.float64)
     if xy.shape != (2,) or not np.all(np.isfinite(xy)):
         raise ValueError(f"position_xy must contain two finite values, got {xy}")
-    qpos_address = joint_qpos_address(model, "pick_object_free")
-    dof_address = joint_dof_address(model, "pick_object_free")
+    qpos_address = joint_qpos_address(model, joint_name)
+    dof_address = joint_dof_address(model, joint_name)
     half_yaw = 0.5 * float(yaw)
     data.qpos[qpos_address : qpos_address + 7] = [
         xy[0],
         xy[1],
-        TABLE_TOP_Z + PICK_OBJECT_HALF_HEIGHT + 0.001,
+        TABLE_TOP_Z + float(half_height) + 0.001,
         np.cos(half_yaw),
         0.0,
         0.0,

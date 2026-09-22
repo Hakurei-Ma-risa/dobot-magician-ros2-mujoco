@@ -1,10 +1,9 @@
 # Gemini Robotics ER simulation adapter
 
-This package sends one MuJoCo RGB frame to `gemini-robotics-er-2-preview`,
-validates the structured response, and converts the model's normalized `[y, x]`
-point and bounding box to pixels. The ROS probe publishes that box to the
-existing RGB-D localizer and reports the 3-D pose. It does not publish a motion
-command or control a physical Dobot.
+This package has a single-frame diagnostic probe and a MuJoCo-only interactive
+terminal. Gemini Robotics ER proposes target points and boxes from the
+base-mounted RGB camera. RGB-D localization and portable actions execute
+simulated picks and placements. No physical Dobot is controlled.
 
 Install the optional client only in the MuJoCo environment:
 
@@ -52,5 +51,22 @@ marker. The API can take several seconds, so this probe assumes a stationary
 scene during the request. The bottom-edge anchor corrects for the cylinder's
 upper half being hidden by the tool. One 640x480 run localized the cylinder
 within 0.71 mm of MuJoCo ground truth; this is a single-scene result, not an
-accuracy guarantee. Continuous tracking and pick execution remain a separate
-step.
+accuracy guarantee. The diagnostic probe does not execute a pick.
+
+## Interactive clutter simulation
+
+Launch `ros2 launch mani_mujoco dobot_clutter.launch.py` in one terminal. In a
+second terminal, source ROS Humble, `.venv_ros_mujoco`, and `install/setup.bash`,
+then run `ros2 run mani_gemini gemini_sim_chat` with `GEMINI_API_KEY` set. Run
+`/help` for examples; `/find 紫色方块`, `/pick 紫色方块`, `/place 右侧空旷位置`, and
+`/reset 42` are supported. Plain text asks a scene question.
+
+The terminal checks that its RGB publisher is the MuJoCo server and that the
+perfect detector is off. It subscribes to RGB, aligned depth, CameraInfo, TF,
+and the RGB-D localizer output, but not simulator ground truth or full state.
+Known object dimensions are a geometry prior. A CSRT tracker updates the 2-D
+box between Gemini calls; when post-pick tracking fails, Gemini can reacquire
+the held object from a fresh frame for lift verification. Placement validates
+an empty depth patch and robot kinematic reachability. This is a research
+prototype: one successful seed=0 block pick/place is not a reliability claim,
+and the simulated gripper differs from the real suction tool.

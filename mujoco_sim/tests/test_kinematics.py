@@ -37,5 +37,5 @@ def test_mujoco_sites_match_analytic_fk() -> None:
 def test_upstream_cad_visual_parts_are_loaded() -> None:
     model = load_model()
     assert model.nmesh == 19
-    # Includes the 33 robot geoms plus the table and pick-object scene geoms.
-    assert model.ngeom == 35
+    # Includes the legacy scene, base camera housing, and parked clutter bodies.
+    assert model.ngeom == 40

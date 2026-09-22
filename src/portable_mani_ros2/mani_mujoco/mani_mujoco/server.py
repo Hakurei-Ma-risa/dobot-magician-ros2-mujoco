@@ -27,6 +27,7 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import CameraInfo, Image, JointState
+from std_msgs.msg import Float64MultiArray
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 
 from .rgbd_camera import MujocoRgbdCamera
@@ -42,18 +43,29 @@ class MujocoServer(Node):
         self.declare_parameter("viewer", False)
         self.declare_parameter("publish_camera", True)
         self.declare_parameter("publish_perfect_detections", True)
+        self.declare_parameter("publish_ground_truth", True)
+        self.declare_parameter("publish_sim_state", False)
+        self.declare_parameter("scene_mode", "single")
         self.declare_parameter("camera_rate_hz", 10.0)
         self.declare_parameter("camera_width", 320)
         self.declare_parameter("camera_height", 240)
         viewer_enabled = bool(self.get_parameter("viewer").value)
         camera_enabled = bool(self.get_parameter("publish_camera").value)
+        self._scene_mode = str(self.get_parameter("scene_mode").value)
+        if self._scene_mode not in ("single", "clutter"):
+            raise ValueError(f"unknown MuJoCo scene mode: {self._scene_mode}")
+        if self._scene_mode == "clutter" and bool(
+            self.get_parameter("publish_perfect_detections").value
+        ):
+            raise ValueError("clutter mode requires publish_perfect_detections:=false")
         if viewer_enabled and camera_enabled:
             raise ValueError(
                 "viewer and offscreen RGB-D rendering use incompatible GL "
                 "contexts; set either viewer:=false or publish_camera:=false"
             )
-        self._backend = DobotMujocoBackend()
-        self._backend.reset_scene(0.22, 0.0)
+        self._backend = DobotMujocoBackend(scene_mode=self._scene_mode)
+        if self._scene_mode == "single":
+            self._backend.reset_scene(0.22, 0.0)
         self._latest_object_bbox: tuple[int, int, int, int] | None = None
         self._viewer = None
         if viewer_enabled:
@@ -70,12 +82,14 @@ class MujocoServer(Node):
         self._capabilities_pub = self.create_publisher(
             RobotCapabilities, "/mani/capabilities", latched
         )
-        self._ground_truth_pub = self.create_publisher(
-            SceneObjectArray, "/mani/sim/ground_truth", 10
+        self._ground_truth_pub = (
+            self.create_publisher(SceneObjectArray, "/mani/sim/ground_truth", 10)
+            if bool(self.get_parameter("publish_ground_truth").value)
+            else None
         )
         self._scene_bypass_pub = (
             None
-            if camera_enabled
+            if camera_enabled or self._scene_mode == "clutter"
             else self.create_publisher(SceneObjectArray, "/mani/scene_objects", 10)
         )
         self._detections_pub = (
@@ -87,6 +101,11 @@ class MujocoServer(Node):
         )
         self._tcp_pub = self.create_publisher(PoseStamped, "/mani/tcp_pose", 10)
         self._joints_pub = self.create_publisher(JointState, "/joint_states", 10)
+        self._sim_state_pub = (
+            self.create_publisher(Float64MultiArray, "/mani/sim/qpos", 10)
+            if bool(self.get_parameter("publish_sim_state").value)
+            else None
+        )
 
         self._camera: MujocoRgbdCamera | None = None
         self._camera_thread: Thread | None = None
@@ -194,8 +213,9 @@ class MujocoServer(Node):
         self._fill_pose(message.pose, pose)
         return message
 
-    def _scene_object_message(self) -> SceneObject:
-        state = self._backend.scene_object()
+    def _scene_object_message(self, state=None) -> SceneObject:
+        if state is None:
+            state = self._backend.scene_object()
         message = SceneObject()
         message.header.stamp = self.get_clock().now().to_msg()
         message.header.frame_id = state.pose.frame_id
@@ -310,6 +330,10 @@ class MujocoServer(Node):
                 self._backend.model,
                 width=self._camera_width,
                 height=self._camera_height,
+                camera_name=(
+                    "d435i_base" if self._scene_mode == "clutter" else "d435i_sim"
+                ),
+                include_segmentation=self._detections_pub is not None,
             )
             self._camera = camera
             self._publish_camera_transforms()
@@ -390,7 +414,11 @@ class MujocoServer(Node):
     def _publish_state(self) -> None:
         with self._lock:
             state = self._backend.state()
-            scene_object = self._scene_object_message()
+            scene_objects = [
+                self._scene_object_message(item)
+                for item in self._backend.scene_objects()
+            ]
+            sim_qpos = self._backend.data.qpos.copy()
             if self._viewer is not None and self._viewer.is_running():
                 self._viewer.sync()
         stamp = self.get_clock().now().to_msg()
@@ -403,21 +431,26 @@ class MujocoServer(Node):
         joints.position = state.position.tolist()
         joints.velocity = state.velocity.tolist()
         self._joints_pub.publish(joints)
+        if self._sim_state_pub is not None:
+            sim_state = Float64MultiArray()
+            sim_state.data = sim_qpos.tolist()
+            self._sim_state_pub.publish(sim_state)
 
         ground_truth = SceneObjectArray()
         ground_truth.header.stamp = stamp
         ground_truth.header.frame_id = state.tcp_pose.frame_id
-        ground_truth.objects = [scene_object]
-        self._ground_truth_pub.publish(ground_truth)
+        ground_truth.objects = scene_objects
+        if self._ground_truth_pub is not None:
+            self._ground_truth_pub.publish(ground_truth)
         if self._scene_bypass_pub is not None:
             self._scene_bypass_pub.publish(ground_truth)
 
-        detection = self._detection_message(scene_object)
-        detections = SceneObjectArray()
-        detections.header.stamp = stamp
-        detections.header.frame_id = "camera_color_optical_frame"
-        detections.objects = [] if detection is None else [detection]
         if self._detections_pub is not None:
+            detection = self._detection_message(scene_objects[0])
+            detections = SceneObjectArray()
+            detections.header.stamp = stamp
+            detections.header.frame_id = "camera_color_optical_frame"
+            detections.objects = [] if detection is None else [detection]
             self._detections_pub.publish(detections)
 
     def _goal_move(self, request: MoveToPose.Goal) -> GoalResponse:
@@ -502,6 +535,17 @@ class MujocoServer(Node):
         return response
 
     def _reset_scene(self, request, response):
+        if self._scene_mode == "clutter":
+            if not request.randomize:
+                response.success = False
+                response.message = "clutter reset requires randomize: true"
+                return response
+            with self._lock:
+                self._backend.reset_clutter(seed=int(request.seed))
+            response.success = True
+            response.message = "clutter scene reset; object poses withheld"
+            self._publish_state()
+            return response
         if request.randomize:
             rng = np.random.default_rng(request.seed)
             x = float(rng.uniform(0.20, 0.28))

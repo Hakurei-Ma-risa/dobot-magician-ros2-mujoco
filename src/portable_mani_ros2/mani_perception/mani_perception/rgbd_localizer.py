@@ -151,6 +151,59 @@ def localize_bbox(
     return center
 
 
+def localize_roi_points(
+    depth_m: np.ndarray,
+    bbox_xywh: tuple[int, int, int, int],
+    intrinsics: PinholeIntrinsics,
+    translation_target_from_camera: np.ndarray,
+    rotation_target_from_camera: np.ndarray,
+    *,
+    support_plane_z_m: float,
+    object_height_m: float,
+) -> np.ndarray | None:
+    """Estimate a tabletop object's center from its visible depth footprint.
+
+    The bbox may include background. Project the ROI, retain points in the
+    expected object-height band, then find the horizontal footprint midpoint.
+    This is especially useful for blocks viewed obliquely by a base camera.
+    """
+    x, y, width, height = bbox_xywh
+    x0, y0 = max(0, x), max(0, y)
+    x1 = min(depth_m.shape[1], x + width)
+    y1 = min(depth_m.shape[0], y + height)
+    if x0 >= x1 or y0 >= y1 or object_height_m <= 0.0:
+        return None
+    yy, xx = np.mgrid[y0:y1, x0:x1]
+    zz = depth_m[y0:y1, x0:x1]
+    valid = np.isfinite(zz) & (zz > 0.05) & (zz < 5.0)
+    if not np.any(valid):
+        return None
+    zz = zz[valid]
+    optical = np.stack(
+        (
+            (xx[valid] - intrinsics.cx) * zz / intrinsics.fx,
+            (yy[valid] - intrinsics.cy) * zz / intrinsics.fy,
+            zz,
+        ),
+        axis=0,
+    )
+    points = (rotation_target_from_camera @ optical).T + translation_target_from_camera
+    object_points = points[
+        (points[:, 2] >= support_plane_z_m + 0.005)
+        & (points[:, 2] <= support_plane_z_m + object_height_m + 0.015)
+    ]
+    if object_points.shape[0] < 20:
+        return None
+    bounds = np.quantile(object_points[:, :2], [0.01, 0.99], axis=0)
+    return np.array(
+        [
+            float(np.mean(bounds[:, 0])),
+            float(np.mean(bounds[:, 1])),
+            support_plane_z_m + object_height_m * 0.5,
+        ]
+    )
+
+
 class RgbdLocalizer(Node):
     def __init__(self) -> None:
         super().__init__("mani_rgbd_localizer")
@@ -168,6 +221,7 @@ class RgbdLocalizer(Node):
         self.declare_parameter("support_plane_z_m", 0.05)
         self.declare_parameter("use_support_plane", True)
         self.declare_parameter("support_anchor", "center")
+        self.declare_parameter("localization_mode", "bbox")
 
         self._lock = Lock()
         self._depth: Image | None = None
@@ -286,22 +340,37 @@ class RgbdLocalizer(Node):
             depth_value = robust_roi_depth(depth_m, bbox)
             if depth_value is None:
                 continue
-            position = localize_bbox(
-                bbox,
-                depth_value,
-                intrinsics,
-                translation,
-                rotation,
-                support_plane_z_m=support_plane,
-                object_height_m=float(detection.size.z),
-                support_anchor=str(self.get_parameter("support_anchor").value),
-                support_footprint_radius_m=(
-                    0.5 * min(float(detection.size.x), float(detection.size.y))
-                    if str(self.get_parameter("support_anchor").value)
-                    == "bbox_bottom"
-                    else 0.0
-                ),
-            )
+            position = None
+            if (
+                str(self.get_parameter("localization_mode").value) == "roi_points"
+                and support_plane is not None
+            ):
+                position = localize_roi_points(
+                    depth_m,
+                    bbox,
+                    intrinsics,
+                    translation,
+                    rotation,
+                    support_plane_z_m=support_plane,
+                    object_height_m=float(detection.size.z),
+                )
+            if position is None:
+                position = localize_bbox(
+                    bbox,
+                    depth_value,
+                    intrinsics,
+                    translation,
+                    rotation,
+                    support_plane_z_m=support_plane,
+                    object_height_m=float(detection.size.z),
+                    support_anchor=str(self.get_parameter("support_anchor").value),
+                    support_footprint_radius_m=(
+                        0.5 * min(float(detection.size.x), float(detection.size.y))
+                        if str(self.get_parameter("support_anchor").value)
+                        == "bbox_bottom"
+                        else 0.0
+                    ),
+                )
             item = SceneObject()
             item.header = output.header
             item.uuid = detection.uuid

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from time import monotonic
 from typing import Callable
 
@@ -19,6 +20,7 @@ from dobot_mujoco.model import (
     joint_qpos_address,
     load_model,
     raw_pose_from_data,
+    reset_free_object,
     reset_pick_object,
     set_raw_pose,
     site_position,
@@ -47,6 +49,48 @@ from ..kinematics import (
 )
 
 
+@dataclass(frozen=True)
+class ClutterItem:
+    body: str
+    joint: str
+    uuid: str
+    class_id: str
+    size_xyz_m: tuple[float, float, float]
+    anchor_xy_m: tuple[float, float]
+
+    @property
+    def half_height_m(self) -> float:
+        return self.size_xyz_m[2] * 0.5
+
+    @property
+    def footprint_radius_m(self) -> float:
+        return max(self.size_xyz_m[0], self.size_xyz_m[1]) * 0.5
+
+
+CLUTTER_ITEMS = (
+    ClutterItem(
+        "pick_object", "pick_object_free", "pick-object-0", "cylinder",
+        (0.024, 0.024, 0.050), (0.245, 0.015),
+    ),
+    ClutterItem(
+        "can_red", "can_red_free", "can-red-0", "can",
+        (0.032, 0.032, 0.090), (0.300, -0.105),
+    ),
+    ClutterItem(
+        "can_blue", "can_blue_free", "can-blue-0", "can",
+        (0.032, 0.032, 0.090), (0.295, 0.120),
+    ),
+    ClutterItem(
+        "block_green", "block_green_free", "block-green-0", "block",
+        (0.036, 0.036, 0.036), (0.160, -0.100),
+    ),
+    ClutterItem(
+        "block_purple", "block_purple_free", "block-purple-0", "block",
+        (0.036, 0.036, 0.036), (0.165, 0.105),
+    ),
+)
+
+
 class DobotMujocoBackend:
     """Reference backend used to prove sim/real interface equivalence."""
 
@@ -55,7 +99,10 @@ class DobotMujocoBackend:
     GROUP = "arm"
     END_EFFECTOR = "gripper"
 
-    def __init__(self) -> None:
+    def __init__(self, *, scene_mode: str = "single") -> None:
+        if scene_mode not in ("single", "clutter"):
+            raise ValueError(f"unknown scene mode: {scene_mode}")
+        self.scene_mode = scene_mode
         self.model = load_model()
         self.data = mujoco.MjData(self.model)
         self._step_callback: Callable[[], None] | None = None
@@ -99,6 +146,8 @@ class DobotMujocoBackend:
             max_state_age_s=1.0,
         )
         self.reset()
+        if self.scene_mode == "clutter":
+            self.reset_clutter(seed=0)
 
     @property
     def capabilities(self) -> EmbodimentCapabilities:
@@ -157,6 +206,71 @@ class DobotMujocoBackend:
             confidence=1.0,
             source="mujoco_ground_truth",
         )
+
+    def scene_objects(self) -> tuple[SceneObjectState, ...]:
+        if self.scene_mode == "single":
+            return (self.scene_object(),)
+        objects = []
+        for item in CLUTTER_ITEMS:
+            position = body_position(self.model, self.data, item.body)
+            yaw = body_yaw(self.model, self.data, item.body)
+            objects.append(
+                SceneObjectState(
+                    uuid=item.uuid,
+                    class_id=item.class_id,
+                    pose=Pose.from_xyz_yaw(
+                        *position, yaw, frame_id="magician_base_link"
+                    ),
+                    size=np.array(item.size_xyz_m),
+                    confidence=1.0,
+                    source="mujoco_ground_truth",
+                )
+            )
+        return tuple(objects)
+
+    def reset_clutter(self, *, seed: int = 0) -> tuple[SceneObjectState, ...]:
+        """Place five free bodies using a reproducible, collision-free layout."""
+
+        self.reset()
+        marker_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_BODY, "target_marker"
+        )
+        self.data.mocap_pos[self.model.body_mocapid[marker_id]] = [2.0, 2.0, 2.0]
+        rng = np.random.default_rng(seed)
+        placed: list[tuple[np.ndarray, float]] = []
+        for item in CLUTTER_ITEMS:
+            anchor = np.asarray(item.anchor_xy_m, dtype=np.float64)
+            for _ in range(100):
+                xy = anchor + rng.uniform(-0.020, 0.020, size=2)
+                radius = item.footprint_radius_m
+                if not (0.11 + radius <= xy[0] <= 0.35 - radius):
+                    continue
+                if not (-0.18 + radius <= xy[1] <= 0.18 - radius):
+                    continue
+                if all(
+                    np.linalg.norm(xy - other_xy) >= radius + other_radius + 0.015
+                    for other_xy, other_radius in placed
+                ):
+                    break
+            else:
+                raise RuntimeError(f"failed to place clutter item {item.body}")
+            reset_free_object(
+                self.model,
+                self.data,
+                item.joint,
+                xy,
+                half_height=item.half_height_m,
+                yaw=float(rng.uniform(-np.pi, np.pi)),
+            )
+            placed.append((xy, radius))
+
+        raw = raw_pose_from_data(self.model, self.data)
+        control_raw_pose(
+            self.model, self.data, raw, gripper=self._gripper_position
+        )
+        for _ in range(250):
+            mujoco.mj_step(self.model, self.data)
+        return self.scene_objects()
 
     def reset_scene(self, x: float, y: float, *, yaw: float = 0.0) -> SceneObjectState:
         self.reset()

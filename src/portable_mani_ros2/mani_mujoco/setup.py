@@ -24,6 +24,7 @@ setup(
         "console_scripts": [
             "mujoco_server = mani_mujoco.server:main",
             "closed_loop_evaluator = mani_mujoco.closed_loop_evaluator:main",
+            "state_viewer = mani_mujoco.state_viewer:main",
         ],
     },
 )

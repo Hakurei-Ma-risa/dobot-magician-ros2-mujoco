@@ -18,6 +18,7 @@ D435i 的 RGB-D 数据通路。
 | MuJoCo | 可用 | 4-DOF 模型、FK 对比、Gymnasium、抓取评估 |
 | RealSense D435i | 可用 | RGB、深度、对齐深度、CameraInfo、USB 3 |
 | Portable Mani | 原型可用 | 通用接口、Dobot adapter、MuJoCo backend、RGB-D localizer |
+| Gemini ER 多物体仿真 | 已跑通一例 | 基座 RGB-D 识别、抓取、视觉复核、空位放置；仅仿真 |
 | LeRobot / ACT | 未集成 | 建议后续通过通用 observation/action contract 接入 |
 
 真机测试结果：
@@ -138,11 +139,29 @@ python -m pip install -e src/portable_mani_ros2/mani_core
 python -m pip install -e src/portable_mani_ros2/mani_dobot
 ```
 
-## Gemini Robotics ER（仅仿真提议模式）
+ROS 2 + MuJoCo + Gemini 使用独立的系统 Python 3.10 venv，不要使用 Conda
+的 3.12 环境启动 ROS 节点。首次在本机创建并构建：
+
+```bash
+conda deactivate 2>/dev/null || true
+sudo apt install -y python3-venv python3-opencv
+source /opt/ros/humble/setup.bash
+python3 -m venv --system-site-packages .venv_ros_mujoco
+source .venv_ros_mujoco/bin/activate
+python -m pip install 'mujoco==3.13.0' google-genai
+python -m colcon build --symlink-install --packages-select \
+  mani_interfaces mani_core mani_tasks mani_perception mani_dobot mani_mujoco mani_gemini
+source install/setup.bash
+```
+
+可用 `python -c 'import cv2; print(hasattr(cv2, "TrackerCSRT_create"))'`
+确认 OpenCV 含 CSRT 跟踪器。
+
+## Gemini Robotics ER（仅仿真）
 
 Gemini Robotics ER 2 是视觉-语言的具身推理模型，适合输出目标点、框和任务
-规划；它不是关节控制器。当前仓库的 `mani_gemini` 只发送一帧 MuJoCo RGB
-图像并验证结构化提议，不发布 ROS 运动命令，也不触碰真机。官方文档：
+规划；它不是关节控制器。`mani_gemini` 有单帧诊断探针，以及只连接 MuJoCo
+的交互式抓放终端。它不连接真机。官方文档：
 [Robotics overview](https://ai.google.dev/gemini-api/docs/robotics-overview)、
 [spatial reasoning](https://ai.google.dev/gemini-api/docs/robotics-spatial)。
 
@@ -189,7 +208,53 @@ ros2 run mani_gemini gemini_er_sim_probe
 ER 的坐标是归一化 `[y, x]`、范围 `0..1000`。实时探针通过现有深度、
 CameraInfo 和静态 TF 投影到 `/mani/scene_objects`，并对比仿真真值报告定位误差。
 一次 640×480 静态测试的定位误差为 `0.71 mm`；这不是跨场景精度保证。
-本阶段只测试识别和 3-D 定位，尚未调用 `/mani/pick_object`。
+上面的单帧探针只测试识别和 3-D 定位，不调用 `/mani/pick_object`。
+
+### 多物体交互仿真
+
+新场景有红/蓝易拉罐、绿/紫方块和黄色圆柱。模拟 D435i 固定在机械臂基座，
+发布 RGB、对齐深度和 CameraInfo；Gemini 终端只订阅这些相机数据、TF、
+视觉重建的 `/mani/scene_objects`，通过通用 ROS 动作执行抓放。MuJoCo 真值
+不参与 Gemini 决策。MuJoCo 画面通过独立 viewer 进程显示。
+
+终端 1（启动仿真；无需插真机或相机）：
+
+```bash
+cd /home/hongjin/Documents/Codex/2026-09-17/new-chat/outputs/dobot_magician_ros2
+conda deactivate 2>/dev/null || true
+source /opt/ros/humble/setup.bash
+source .venv_ros_mujoco/bin/activate
+source install/setup.bash
+ros2 launch mani_mujoco dobot_clutter.launch.py
+```
+
+终端 2（不要把密钥写入仓库、终端历史或聊天消息）：
+
+```bash
+cd /home/hongjin/Documents/Codex/2026-09-17/new-chat/outputs/dobot_magician_ros2
+conda deactivate 2>/dev/null || true
+source /opt/ros/humble/setup.bash
+source .venv_ros_mujoco/bin/activate
+source install/setup.bash
+GEMINI_API_KEY="$(tr -d '\r\n' < /home/hongjin/Key_Gemini.txt)" \
+  ros2 run mani_gemini gemini_sim_chat
+```
+
+在 `Gemini(sim)>` 提示符下可以输入自然语言问题，也可以依次尝试：
+
+```text
+/find 紫色方块
+/pick 紫色方块
+/place 右侧空旷位置
+/reset 42
+/quit
+```
+
+一次 seed=0 测试中，紫色方块初始视觉定位与仿真真值相差约 1 mm，成功
+抓起并放在右侧；该结果不代表随机场景的成功率。抓取后遮挡会导致连续跟踪
+丢失，程序会在验收失败时重新向 Gemini 查询当前图像。放置前会检查桌面
+深度空位和 Dobot 运动学可达性。此处是理想化 RGB-D 与夹爪模型，真机
+仍是吸盘；摩擦、遮挡、相机标定和时延都需要进一步验证。
 
 ## MuJoCo 验证
 

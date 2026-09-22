@@ -9,8 +9,14 @@
   <exec_depend>rclpy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>mani_interfaces</exec_depend>
+  <exec_depend>mani_core</exec_depend>
+  <exec_depend>mani_dobot</exec_depend>
+  <exec_depend>mani_perception</exec_depend>
+  <exec_depend>mani_tasks</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>python3-pil</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
   <export>
     <build_type>ament_python</build_type>
   </export>

@@ -3,6 +3,7 @@ import numpy as np
 from mani_perception.rgbd_localizer import (
     PinholeIntrinsics,
     localize_bbox,
+    localize_roi_points,
     robust_roi_depth,
 )
 
@@ -62,3 +63,20 @@ def test_bottom_anchor_corrects_near_rim_of_cylinder() -> None:
         position, [0.50 + direction[0] * 0.01, 0.20 + direction[1] * 0.01, 0.05],
         atol=1e-9,
     )
+
+
+def test_roi_points_recovers_center_without_background_depth() -> None:
+    depth = np.full((120, 120), 1.0)
+    depth[45:75, 45:75] = 0.9
+    intrinsics = PinholeIntrinsics(fx=100.0, fy=100.0, cx=60.0, cy=60.0)
+    point = localize_roi_points(
+        depth,
+        (40, 40, 40, 40),
+        intrinsics,
+        np.array([0.0, 0.0, 1.0]),
+        np.diag([1.0, -1.0, -1.0]),
+        support_plane_z_m=0.0,
+        object_height_m=0.1,
+    )
+    assert point is not None
+    np.testing.assert_allclose(point, [-0.0045, 0.0045, 0.05], atol=1e-8)

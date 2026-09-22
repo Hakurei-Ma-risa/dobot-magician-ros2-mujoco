@@ -1,5 +1,6 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -11,7 +12,12 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument("viewer", default_value="false"),
             DeclareLaunchArgument("publish_camera", default_value="true"),
             DeclareLaunchArgument("publish_perfect_detections", default_value="true"),
+            DeclareLaunchArgument("publish_ground_truth", default_value="true"),
+            DeclareLaunchArgument("publish_sim_state", default_value="false"),
+            DeclareLaunchArgument("scene_mode", default_value="single"),
+            DeclareLaunchArgument("visualize", default_value="false"),
             DeclareLaunchArgument("localizer_support_anchor", default_value="center"),
+            DeclareLaunchArgument("localizer_mode", default_value="bbox"),
             DeclareLaunchArgument("camera_rate_hz", default_value="10.0"),
             DeclareLaunchArgument("camera_width", default_value="320"),
             DeclareLaunchArgument("camera_height", default_value="240"),
@@ -33,6 +39,15 @@ def generate_launch_description() -> LaunchDescription:
                             LaunchConfiguration("publish_perfect_detections"),
                             value_type=bool,
                         ),
+                        "publish_ground_truth": ParameterValue(
+                            LaunchConfiguration("publish_ground_truth"),
+                            value_type=bool,
+                        ),
+                        "publish_sim_state": ParameterValue(
+                            LaunchConfiguration("publish_sim_state"),
+                            value_type=bool,
+                        ),
+                        "scene_mode": LaunchConfiguration("scene_mode"),
                         "camera_rate_hz": ParameterValue(
                             LaunchConfiguration("camera_rate_hz"), value_type=float
                         ),
@@ -46,6 +61,15 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
+                package="mani_mujoco",
+                executable="state_viewer",
+                name="mani_mujoco_state_viewer",
+                output="screen",
+                condition=IfCondition(LaunchConfiguration("visualize")),
+                additional_env={"MUJOCO_GL": "glfw"},
+                parameters=[{"scene_mode": LaunchConfiguration("scene_mode")}],
+            ),
+            Node(
                 package="mani_perception",
                 executable="rgbd_localizer",
                 name="mani_rgbd_localizer",
@@ -54,7 +78,8 @@ def generate_launch_description() -> LaunchDescription:
                     {
                         "support_anchor": LaunchConfiguration(
                             "localizer_support_anchor"
-                        )
+                        ),
+                        "localization_mode": LaunchConfiguration("localizer_mode"),
                     }
                 ],
             ),
