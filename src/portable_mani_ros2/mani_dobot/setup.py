@@ -28,6 +28,9 @@ setup(
             "mujoco_pick_eval = mani_dobot.pick_evaluator:main",
             "handeye_capture = mani_dobot.handeye_capture:main",
             "suction_task_cycle = mani_dobot.suction_task_cycle:main",
+            "fast_pick_place = mani_dobot.fast_pick_place:main",
+            "sensor_check = mani_dobot.sensor_check:main",
+            "dobot_home = mani_dobot.dobot_home:main",
         ],
     },
 )
