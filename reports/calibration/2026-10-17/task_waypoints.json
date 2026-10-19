@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "task": "Student Build Challenge 3: pick_A to place_B/place_C/place_D",
+  "status": "all_contact_waypoints_recorded_transfer_validation_pending",
+  "updated_utc": "2026-10-17T02:37:39.870207+00:00",
+  "robot_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EA056287-if00",
+  "camera_serial": "233522078258",
+  "coordinate_convention": "Dobot controller XYZ in millimetres and R in degrees; not a calibrated camera-to-base transform.",
+  "controller_tool_bias_mm": [59.70000076293945, 0.0, 0.0],
+  "tool": "suction_cup",
+  "pick_A": {
+    "status": "manually_taught_contact_and_vertical_lift_verified",
+    "controller_xyz_mm": [204.83059692382812, 69.3899154663086, -45.65318298339844],
+    "controller_yaw_deg": 18.71470069885254,
+    "vendor_joints_deg": [18.71470069885254, 48.07060623168945, 67.55284881591797, 0.0],
+    "contact_reference": "User aligned suction cup to the red block top; not the bare table.",
+    "source_record": "manual_two_point_result.json",
+    "grasp_verification_record": "red_block_lift_10mm.json",
+    "historical_name_warning": "manual_two_point_result B is this pick_A contact point, not task place_B."
+  },
+  "destinations_in_order": ["place_B", "place_C", "place_D"],
+  "place_B": {
+    "status": "manually_taught_contact_recorded",
+    "controller_xyz_mm": [206.99929809570312, -63.36740112304687, -45.26304626464844],
+    "controller_yaw_deg": -17.020595550537113,
+    "vendor_joints_deg": [-17.020593643188477, 47.94572067260742, 67.37850189208984, -0.0000019073486328125],
+    "contact_reference": "User aligned suction cup to the same red block top at the centre of task-sheet B; not the bare table.",
+    "recorded_utc": "2026-10-17T02:34:10.823397+00:00",
+    "source_record": "task_place_B.json",
+    "alarm_codes": [],
+    "suction_off_readback_verified": true,
+    "transfer_path_validated": false
+  },
+  "place_C": {
+    "status": "manually_taught_contact_recorded",
+    "controller_xyz_mm": [209.57937622070312, -92.19148254394531, -47.31372833251953],
+    "controller_yaw_deg": -23.74412536621094,
+    "vendor_joints_deg": [-23.744123458862305, 51.040321350097656, 64.06710815429688, -0.0000019073486328125],
+    "contact_reference": "User aligned suction cup to the same red block top at the centre of task-sheet C; not the bare table.",
+    "recorded_utc": "2026-10-17T02:35:50.903520+00:00",
+    "source_record": "task_place_C.json",
+    "alarm_codes": [],
+    "suction_off_readback_verified": true,
+    "transfer_path_validated": false
+  },
+  "place_D": {
+    "status": "manually_taught_contact_recorded",
+    "controller_xyz_mm": [210.87490844726562, -147.76919555664062, -46.8529052734375],
+    "controller_yaw_deg": -35.020599365234375,
+    "vendor_joints_deg": [-35.02059555053711, 57.050655364990234, 54.90747833251953, -0.0000019073486328125],
+    "contact_reference": "User aligned suction cup to the same red block top at the centre of task-sheet D; not the bare table.",
+    "recorded_utc": "2026-10-17T02:37:39.870207+00:00",
+    "source_record": "task_place_D.json",
+    "alarm_codes": [],
+    "suction_off_readback_verified": true,
+    "transfer_path_validated": false
+  },
+  "destination_teaching_method": "Keep the sheet and robot base fixed. With motion stopped and suction off, put the same block at the labelled destination centre, use powered Unlock hand-guiding to gently touch its top with the cup, release Unlock, then explicitly confirm the named point for read-only recording.",
+  "image_only_localization": {
+    "task_layout_source": "User task ZIP, IMG_1756: the three destination boxes are B/C/D from left to right in the task illustration.",
+    "robot_coordinates_from_picture_available": false,
+    "limitation": "The physical paper is partly occluded in the current side camera view and no validated camera-to-base transform exists. No pixel-derived robot coordinates are assigned."
+  },
+  "all_contact_waypoints_recorded": true,
+  "geometry_review_note": "Recorded destination spacings are not assumed equal. Keep each taught XYZ/yaw independently; verify the physical B/C/D labels before automatic transfer.",
+  "tcp_reference_verified": false,
+  "camera_extrinsic_calibrated": false,
+  "automatic_pick_and_place_ready": false
+}

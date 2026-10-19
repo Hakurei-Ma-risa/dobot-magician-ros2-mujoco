@@ -24,6 +24,7 @@ setup(
         "console_scripts": [
             "camera_healthcheck = mani_perception.camera_healthcheck:main",
             "rgbd_localizer = mani_perception.rgbd_localizer:main",
+            "point_calibration_solve = mani_perception.point_calibration:main",
         ],
     },
 )

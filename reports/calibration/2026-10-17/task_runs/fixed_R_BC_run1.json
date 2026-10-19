@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T03:08:51.633518+00:00",
+  "mode": "refill",
+  "routes": [
+    [
+      "pick_A",
+      "place_B"
+    ],
+    [
+      "pick_A",
+      "place_C"
+    ]
+  ],
+  "config_sha256": "342b0e0d101a3d9adbd4997af2ef35941b133b93aaf77a34153fcfd60e426168",
+  "robot_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EA056287-if00",
+  "safe_z_mm": -10.0,
+  "yaw_policy": "hold",
+  "yaw_reference_deg": 18.71470069885254,
+  "status": "stopped",
+  "stage": "stopped",
+  "holding_assumption": "empty",
+  "completed_destinations": [
+    "place_B"
+  ],
+  "automatic_resume_allowed": false,
+  "events": [
+    {
+      "at_utc": "2026-10-17T03:08:51.633536+00:00",
+      "stage": "wait_for_source",
+      "status": "waiting_for_operator",
+      "target_index": 0,
+      "source": "pick_A",
+      "target": "place_B"
+    },
+    {
+      "at_utc": "2026-10-17T03:09:15.410286+00:00",
+      "stage": "running",
+      "status": "running"
+    },
+    {
+      "at_utc": "2026-10-17T03:09:15.430397+00:00",
+      "stage": "raise_empty_at_current",
+      "goal_controller_mm_deg": [
+        204.8306121826172,
+        69.38992309570312,
+        -10.0,
+        18.71470069885254
+      ],
+      "segments": 6
+    },
+    {
+      "at_utc": "2026-10-17T03:09:24.739842+00:00",
+      "stage": "above_source",
+      "goal_controller_mm_deg": [
+        204.83059692382812,
+        69.3899154663086,
+        -10.0,
+        18.71470069885254
+      ],
+      "segments": 1
+    },
+    {
+      "at_utc": "2026-10-17T03:09:25.092748+00:00",
+      "stage": "descend_to_source",
+      "goal_controller_mm_deg": [
+        204.83059692382812,
+        69.3899154663086,
+        -45.65318298339844,
+        18.71470069885254
+      ],
+      "segments": 8
+    },
+    {
+      "at_utc": "2026-10-17T03:09:38.269592+00:00",
+      "stage": "suction_on",
+      "holding_assumption": "unverified_suction"
+    },
+    {
+      "at_utc": "2026-10-17T03:09:38.283059+00:00",
+      "stage": "grasp_yaw_locked",
+      "locked_grasp_yaw_deg": 18.71470069885254
+    },
+    {
+      "at_utc": "2026-10-17T03:09:38.290698+00:00",
+      "stage": "trial_lift_10mm",
+      "goal_controller_mm_deg": [
+        204.83059692382812,
+        69.3899154663086,
+        -35.65318298339844,
+        18.71470069885254
+      ],
+      "segments": 3
+    },
+    {
+      "at_utc": "2026-10-17T03:10:35.643415+00:00",
+      "stage": "grasp_confirmed",
+      "holding_assumption": "operator_confirmed_held"
+    },
+    {
+      "at_utc": "2026-10-17T03:10:35.651172+00:00",
+      "stage": "lift_loaded",
+      "goal_controller_mm_deg": [
+        204.83059692382812,
+        69.3899154663086,
+        -10.0,
+        18.71470069885254
+      ],
+      "segments": 6
+    },
+    {
+      "at_utc": "2026-10-17T03:10:44.991027+00:00",
+      "stage": "transfer_at_safe_height",
+      "goal_controller_mm_deg": [
+        206.99929809570312,
+        -63.36740112304687,
+        -10.0,
+        18.71470069885254
+      ],
+      "segments": 30
+    },
+    {
+      "at_utc": "2026-10-17T03:11:31.689166+00:00",
+      "stage": "descend_to_target",
+      "goal_controller_mm_deg": [
+        206.99929809570312,
+        -63.36740112304687,
+        -45.26304626464844,
+        18.71470069885254
+      ],
+      "segments": 8
+    },
+    {
+      "at_utc": "2026-10-17T03:11:44.881095+00:00",
+      "stage": "suction_off",
+      "holding_assumption": "release_unconfirmed"
+    },
+    {
+      "at_utc": "2026-10-17T03:11:44.888998+00:00",
+      "stage": "release_check_retract_10mm",
+      "goal_controller_mm_deg": [
+        206.99929809570312,
+        -63.36740112304687,
+        -35.26304626464844,
+        18.71470069885254
+      ],
+      "segments": 3
+    },
+    {
+      "at_utc": "2026-10-17T03:13:36.397223+00:00",
+      "stage": "release_confirmed",
+      "holding_assumption": "empty"
+    },
+    {
+      "at_utc": "2026-10-17T03:13:36.406775+00:00",
+      "stage": "retract_empty",
+      "goal_controller_mm_deg": [
+        206.99929809570312,
+        -63.36740112304687,
+        -10.0,
+        18.71470069885254
+      ],
+      "segments": 6
+    },
+    {
+      "at_utc": "2026-10-17T03:13:45.529530+00:00",
+      "stage": "target_complete",
+      "completed_destinations": [
+        "place_B"
+      ]
+    },
+    {
+      "at_utc": "2026-10-17T03:13:45.530009+00:00",
+      "stage": "wait_for_source",
+      "status": "waiting_for_operator",
+      "target_index": 1,
+      "source": "pick_A",
+      "target": "place_C"
+    },
+    {
+      "at_utc": "2026-10-17T03:14:49.468749+00:00",
+      "stage": "stopped",
+      "status": "stopped",
+      "error": "RuntimeError: Operator canceled execution; motion stopped, suction retained"
+    }
+  ],
+  "target_index": 1,
+  "source": "pick_A",
+  "target": "place_C",
+  "goal_controller_mm_deg": [
+    206.99929809570312,
+    -63.36740112304687,
+    -10.0,
+    18.71470069885254
+  ],
+  "segments": 6,
+  "locked_grasp_yaw_deg": 18.71470069885254,
+  "error": "RuntimeError: Operator canceled execution; motion stopped, suction retained"
+}

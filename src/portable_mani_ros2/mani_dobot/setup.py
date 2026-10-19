@@ -26,6 +26,8 @@ setup(
             "dobot_bridge = mani_dobot.ros_bridge:main",
             "mujoco_reach_demo = mani_dobot.mujoco_demo:main",
             "mujoco_pick_eval = mani_dobot.pick_evaluator:main",
+            "handeye_capture = mani_dobot.handeye_capture:main",
+            "suction_task_cycle = mani_dobot.suction_task_cycle:main",
         ],
     },
 )

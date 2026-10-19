@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "point_name": "place_C",
+  "status": "stationary_manual_contact_recorded",
+  "recorded_utc": "2026-10-17T02:35:50.903520+00:00",
+  "robot_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EA056287-if00",
+  "camera_serial": "233522078258",
+  "units": {"position": "mm", "angles": "degrees"},
+  "controller_xyz_mm": [209.57937622070312, -92.19148254394531, -47.31372833251953],
+  "controller_yaw_deg": -23.74412536621094,
+  "vendor_joints_deg": [-23.744123458862305, 51.040321350097656, 64.06710815429688, -0.0000019073486328125],
+  "pose_ros_stamp_s": 1792204550.519679,
+  "pose_readback_count": 19,
+  "joint_readback_count": 20,
+  "alarm_readback_count": 10,
+  "position_max_deviation_mm": 0.0,
+  "yaw_range_deg": 0.0,
+  "alarm_codes": [],
+  "suction_raw_state_bytes": [0, 0],
+  "controller_tool_bias_mm": [59.70000076293945, 0.0, 0.0],
+  "tcp_publisher_verified": "Single dobot_state_publisher",
+  "user_reported_contact": "Suction cup gently touching the same red block top at task-sheet C centre, with Unlock released.",
+  "visual_identity_basis": "Point label follows the onsite user's C confirmation; pixel position is not converted into robot coordinates.",
+  "motion_or_suction_commands_sent": false,
+  "rgb_snapshot": "/tmp/dobot_task_place_C_20261017.png",
+  "rgb_ros_stamp_s": 1792204550.704458,
+  "limitations": [
+    "This is a manually taught controller contact pose, not a calibrated camera-derived point.",
+    "Do not replace its measured contact height with B's height without a separate physical check.",
+    "The physical suction-tip TCP and camera extrinsic are not calibrated by this recording.",
+    "No transfer trajectory to or from C has yet been validated."
+  ]
+}

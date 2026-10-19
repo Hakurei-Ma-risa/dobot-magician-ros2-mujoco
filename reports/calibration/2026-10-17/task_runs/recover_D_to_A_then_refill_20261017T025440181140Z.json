@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T02:54:40.686069+00:00",
+  "mode": "refill",
+  "routes": [
+    [
+      "place_D",
+      "pick_A"
+    ],
+    [
+      "pick_A",
+      "place_B"
+    ],
+    [
+      "pick_A",
+      "place_C"
+    ],
+    [
+      "pick_A",
+      "place_D"
+    ]
+  ],
+  "config_sha256": "342b0e0d101a3d9adbd4997af2ef35941b133b93aaf77a34153fcfd60e426168",
+  "robot_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EA056287-if00",
+  "safe_z_mm": -10.0,
+  "status": "stopped",
+  "stage": "stopped",
+  "holding_assumption": "empty",
+  "completed_destinations": [],
+  "automatic_resume_allowed": false,
+  "events": [
+    {
+      "at_utc": "2026-10-17T02:54:40.686089+00:00",
+      "stage": "wait_for_source",
+      "status": "waiting_for_operator",
+      "target_index": 0,
+      "source": "place_D",
+      "target": "pick_A"
+    },
+    {
+      "at_utc": "2026-10-17T02:54:41.544715+00:00",
+      "stage": "stopped",
+      "status": "stopped",
+      "error": "RuntimeError: Missing/stale/future joints header (0.525 s)"
+    }
+  ],
+  "target_index": 0,
+  "source": "place_D",
+  "target": "pick_A",
+  "error": "RuntimeError: Missing/stale/future joints header (0.525 s)"
+}

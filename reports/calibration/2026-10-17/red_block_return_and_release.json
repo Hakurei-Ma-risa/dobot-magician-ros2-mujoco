@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "original_contact_pose_restored_suction_off",
+  "recorded_utc": "2026-10-17T02:31:49.475896+00:00",
+  "user_authorized_action": "Return the block to its original position, turn suction off, then record task-sheet B/C/D positions.",
+  "robot_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EA056287-if00",
+  "units": {"position": "mm", "angles": "degrees"},
+  "motion_mode": "MOVL_XYZ",
+  "configured_speed_mm_s": 3.0,
+  "configured_acceleration_mm_s2": 6.0,
+  "original_controller_xyz_mm": [204.8306121826172, 69.38992309570312, -35.65315246582031],
+  "contact_target_controller_xyz_mm": [204.83059692382812, 69.3899154663086, -45.65318298339844],
+  "protective_stop": {
+    "trigger": "A direct pose read returned no valid pose while starting the second descent segment.",
+    "stopped_controller_xyz_mm": [204.83059692382812, 69.38992309570312, -40.65559387207031],
+    "subsequent_stationary_ROS_pose_readbacks": 12,
+    "subsequent_alarm_codes": [],
+    "suction_kept_on_during_stop": true,
+    "resume_scope": "Only the remaining 4.997589111328125 mm descent to the previously recorded contact height.",
+    "resume_feedback": "Fresh timestamped ROS pose, joint, and alarm topics from the existing state publisher; no concurrent direct pose polling by the motion client."
+  },
+  "final_controller_xyz_mm": [204.8306427001953, 69.38993835449219, -45.65318298339844],
+  "final_controller_yaw_deg": 18.71470069885254,
+  "final_vendor_joints_deg": [18.714702606201172, 48.07061004638672, 67.55284118652344, -0.0000019073486328125],
+  "suction_raw_state_bytes": [0, 0],
+  "suction_off_readback_verified": true,
+  "alarms_clear": true,
+  "motion_queue_stopped_and_cleared": true,
+  "no_retraction_after_release": true,
+  "physical_release_confirmation_pending": true,
+  "task_place_B_C_D_recorded": false
+}

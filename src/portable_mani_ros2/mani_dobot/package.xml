@@ -9,14 +9,17 @@
   <buildtool_depend>ament_python</buildtool_depend>
   <depend>action_msgs</depend>
   <depend>dobot_msgs</depend>
+  <exec_depend>dobot_driver</exec_depend>
   <depend>geometry_msgs</depend>
   <depend>mani_core</depend>
   <depend>mani_interfaces</depend>
+  <depend>mani_perception</depend>
   <depend>mani_tasks</depend>
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <exec_depend>ros2launch</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
   <test_depend>python3-pytest</test_depend>
 
   <export>

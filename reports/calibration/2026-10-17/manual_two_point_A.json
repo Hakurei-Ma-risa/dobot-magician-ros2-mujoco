@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "method": "powered_manual_teaching_two_point_displacement",
+  "status": "A_recorded_waiting_for_manual_B",
+  "recorded_utc": "2026-10-17T02:21:15.769544+00:00",
+  "pose_ros_stamp_s": 1792203675.7695436,
+  "robot_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EA056287-if00",
+  "camera_serial": "233522078258",
+  "units": {
+    "position": "mm",
+    "angles": "degrees"
+  },
+  "A": {
+    "controller_xyz_mm": [210.00001525878906, 0.0, 64.99999237060547],
+    "controller_yaw_deg": 0.0,
+    "vendor_joints_deg": [0.0, 8.615478515625, 27.763797760009766, 0.0],
+    "alarm_codes": [],
+    "stationary_readback_count": 12,
+    "stationary_check_interval_s": 0.08,
+    "rgb_snapshot": "/tmp/dobot_standby_protective_stop_20261017.png"
+  },
+  "controller_end_effector_bias_mm": [59.70000076293945, 0.0, 0.0],
+  "retreat": {
+    "user_confirmed_workspace_clear": true,
+    "motion_mode": "MOVL_XYZ",
+    "max_command_segment_mm": 5.0,
+    "configured_coordinate_velocity_mm_s": 20.0,
+    "configured_coordinate_acceleration_mm_s2": 40.0,
+    "configured_velocity_ratio_percent": 100.0,
+    "start_controller_xyz_mm": [136.3493194580078, 0.0, -9.195343017578125],
+    "original_planned_target_xyz_mm": [210.0, 0.0, 80.0],
+    "original_target_reached": false,
+    "stop_reason": "A single missing pose response triggered force-stop and queue clear. Twelve subsequent valid stationary pose/alarm readbacks and a camera image confirmed the stopped state; no automatic retry was performed.",
+    "remaining_motion_commands_cleared": true,
+    "motion_process_exited": true,
+    "suction_commanded_on": false,
+    "true_homing_performed": false
+  },
+  "B": null,
+  "tcp_reference_verified": false,
+  "camera_extrinsic_calibrated": false,
+  "T_base_camera": null,
+  "restrictions": [
+    "Keep robot powered and fixed to the table between A and B; use the physical Unlock control for manual teaching.",
+    "Do not move the camera or red block after choosing the B contact point.",
+    "Record B only after the suction cup gently contacts the block and the arm has stopped; leave suction off to avoid moving the block.",
+    "Record all vendor joints and yaw at B. Changes in wrist or base heading require checking whether the unknown tool-reference error still cancels.",
+    "A/B differences are provisional relative-displacement measurements, not a verified physical TCP or full camera-to-base calibration."
+  ]
+}

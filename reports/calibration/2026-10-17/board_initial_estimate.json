@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-17",
+  "status": "rough_camera_frame_estimate_only",
+  "accepted": false,
+  "use_restriction": "Not a hand-eye calibration result. Do not publish as robot-base TF or use for robot contact motion.",
+  "camera_serial": "233522078258",
+  "camera_frame": "camera_color_optical_frame",
+  "units": "m",
+  "phone_model_reported_by_user": "Xiaomi 15 Pro",
+  "official_phone_dimensions_m": {
+    "length": 0.1613,
+    "body_width": 0.0753,
+    "source": "https://www.mi.com/prod/xiaomi-15-pro/specs"
+  },
+  "checkerboard": {
+    "inner_corners_columns": 5,
+    "inner_corners_rows": 8,
+    "corner_count": 40,
+    "assumed_complete_pattern_squares_columns": 6,
+    "assumed_complete_pattern_squares_rows": 9,
+    "square_edge_if_body_width_were_grid_width_m": 0.01255,
+    "body_width_is_not_a_measured_grid_width": true
+  },
+  "current_rgbd_diagnostics": {
+    "rgbd_time_gap_ms": 0.0,
+    "valid_depth_corners": 40,
+    "board_center_camera_m": [-0.0129232, 0.0826470, 0.5639500],
+    "camera_to_board_center_distance_m": 0.57012,
+    "board_plane_normal_toward_camera": [0.0720069, -0.9211965, -0.3823769],
+    "camera_distance_to_board_plane_m": 0.292706,
+    "plane_rmse_m": 0.000746,
+    "depth_inferred_square_edge_median_m": 0.0112653,
+    "depth_inferred_square_edge_std_m": 0.0008581,
+    "depth_inferred_grid_outer_width_m": 0.0675398,
+    "depth_inferred_grid_outer_height_m": 0.1059607
+  },
+  "T_base_camera": null,
+  "T_base_board": null,
+  "unresolved": [
+    "The robot-base origin and heading have not been measured in the camera or board frame.",
+    "The physical TCP contact reference is unverified.",
+    "Phone body width differs from active display and displayed checkerboard width.",
+    "RGB-D scale estimates on a reflective phone screen require independent metric validation.",
+    "A small planar residual does not establish absolute depth accuracy or robot positioning accuracy."
+  ]
+}

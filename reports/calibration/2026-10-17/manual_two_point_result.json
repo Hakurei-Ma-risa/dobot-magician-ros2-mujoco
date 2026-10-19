@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "method": "powered_manual_teaching_two_point_displacement",
+  "status": "controller_relative_measurement_recorded",
+  "recorded_utc": "2026-10-17T02:22:51.170484+00:00",
+  "A_record": "manual_two_point_A.json",
+  "robot_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EA056287-if00",
+  "camera_serial": "233522078258",
+  "units": {"position": "mm", "angles": "degrees"},
+  "A": {
+    "controller_xyz_mm": [210.00001525878906, 0.0, 64.99999237060547],
+    "controller_yaw_deg": 0.0,
+    "vendor_joints_deg": [0.0, 8.615478515625, 27.763797760009766, 0.0]
+  },
+  "B": {
+    "controller_xyz_mm": [204.83059692382812, 69.3899154663086, -45.65318298339844],
+    "controller_yaw_deg": 18.71470069885254,
+    "vendor_joints_deg": [18.71470069885254, 48.07060623168945, 67.55284881591797, 0.0],
+    "pose_ros_stamp_s": 1792203771.1700537,
+    "pose_age_s_at_capture": 0.00002098400000249967,
+    "recent_pose_readback_count": 24,
+    "recent_joint_readback_count": 24,
+    "recent_alarm_readback_count": 12,
+    "position_max_deviation_mm": 0.0,
+    "yaw_range_deg": 0.0,
+    "alarm_codes": [],
+    "any_alarm_during_capture": false,
+    "user_reported_contact_with_red_block": true,
+    "visual_observation": "Suction cup appears to rest on the red block top in the captured RGB image; no force or vacuum sensing independently confirms contact.",
+    "rgb_snapshot": "/tmp/dobot_manual_contact_B_20261017.png",
+    "rgb_ros_stamp_s": 1792203770.5513752
+  },
+  "controller_B_minus_A": {
+    "delta_xyz_mm": [-5.1694183349609375, 69.3899154663086, -110.6531753540039],
+    "horizontal_distance_mm": 69.58220501208109,
+    "straight_line_distance_mm": 130.71269437306853,
+    "delta_reported_yaw_deg": 18.71470069885254,
+    "delta_base_joint_deg": 18.71470069885254,
+    "delta_wrist_joint_deg": 0.0
+  },
+  "controller_end_effector_bias_mm": [59.70000076293945, 0.0, 0.0],
+  "same_base_heading": false,
+  "same_total_yaw": false,
+  "unknown_tool_offset_cancellation_established": false,
+  "physical_suction_tip_displacement_verified": false,
+  "tcp_reference_verified": false,
+  "camera_extrinsic_calibrated": false,
+  "T_base_camera": null,
+  "motion_or_suction_commands_sent_while_recording_B": false,
+  "limitations": [
+    "These differences and distances are controller-coordinate measurements, not independently verified physical suction-tip displacement.",
+    "Base heading and total yaw changed by 18.7147 degrees. Unknown horizontal tool-reference errors therefore need not cancel between A and B.",
+    "The configured 59.7 mm bias is not itself a measured error; subtracting it does not calibrate the physical suction cup.",
+    "Vertical difference is less sensitive to horizontal yaw-dependent offsets, but assumes a rigid vertical tool and unchanged cup compression.",
+    "Negative controller Z is relative to the controller reference, not a measured height below the tabletop.",
+    "B can be retained as an unvalidated taught contact pose for this fixed block/tool setup. It does not establish a camera-to-base transform or authorize autonomous contact replay."
+  ]
+}

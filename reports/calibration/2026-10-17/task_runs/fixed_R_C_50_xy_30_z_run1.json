@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T03:22:05.640593+00:00",
+  "mode": "refill",
+  "routes": [
+    [
+      "pick_A",
+      "place_C"
+    ]
+  ],
+  "config_sha256": "342b0e0d101a3d9adbd4997af2ef35941b133b93aaf77a34153fcfd60e426168",
+  "robot_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EA056287-if00",
+  "safe_z_mm": -10.0,
+  "yaw_policy": "hold",
+  "yaw_reference_deg": 18.71470069885254,
+  "status": "complete",
+  "stage": "complete",
+  "holding_assumption": "output_off_release_unverified",
+  "completed_destinations": [
+    "place_C"
+  ],
+  "automatic_resume_allowed": false,
+  "events": [
+    {
+      "at_utc": "2026-10-17T03:22:19.898555+00:00",
+      "stage": "held_continuation",
+      "status": "running",
+      "holding_assumption": "operator_confirmed_held",
+      "source": "pick_A",
+      "target": "place_C",
+      "locked_grasp_yaw_deg": 18.714704513549805,
+      "automatic_resume_allowed": false
+    },
+    {
+      "at_utc": "2026-10-17T03:22:19.977902+00:00",
+      "stage": "lift_loaded",
+      "goal_controller_mm_deg": [
+        204.83059692382812,
+        69.3899154663086,
+        -10.0,
+        18.714704513549805
+      ],
+      "segments": 6,
+      "validation_segment_count": 6,
+      "motion_profile": "segmented",
+      "requested_speed_mm_s": 30.0
+    },
+    {
+      "at_utc": "2026-10-17T03:22:29.366796+00:00",
+      "stage": "transfer_at_safe_height",
+      "goal_controller_mm_deg": [
+        209.57937622070312,
+        -92.19148254394531,
+        -10.0,
+        18.714704513549805
+      ],
+      "segments": 1,
+      "validation_segment_count": 36,
+      "motion_profile": "continuous",
+      "requested_speed_mm_s": 50.0
+    },
+    {
+      "at_utc": "2026-10-17T03:22:37.708305+00:00",
+      "stage": "descend_to_target",
+      "goal_controller_mm_deg": [
+        209.57937622070312,
+        -92.19148254394531,
+        -47.31372833251953,
+        18.714704513549805
+      ],
+      "segments": 9,
+      "validation_segment_count": 9,
+      "motion_profile": "segmented",
+      "requested_speed_mm_s": 30.0
+    },
+    {
+      "at_utc": "2026-10-17T03:22:51.907975+00:00",
+      "stage": "suction_off",
+      "holding_assumption": "release_unconfirmed"
+    },
+    {
+      "at_utc": "2026-10-17T03:22:51.987835+00:00",
+      "stage": "release_check_retract_10mm",
+      "goal_controller_mm_deg": [
+        209.57937622070312,
+        -92.19148254394531,
+        -37.31372833251953,
+        18.714704513549805
+      ],
+      "segments": 3,
+      "validation_segment_count": 3,
+      "motion_profile": "segmented",
+      "requested_speed_mm_s": 30.0
+    },
+    {
+      "at_utc": "2026-10-17T03:22:56.189491+00:00",
+      "stage": "release_output_confirmed",
+      "holding_assumption": "output_off_release_unverified",
+      "physical_release_verified": false
+    },
+    {
+      "at_utc": "2026-10-17T03:22:56.278740+00:00",
+      "stage": "retract_empty",
+      "goal_controller_mm_deg": [
+        209.57937622070312,
+        -92.19148254394531,
+        -10.0,
+        18.714704513549805
+      ],
+      "segments": 7,
+      "validation_segment_count": 7,
+      "motion_profile": "segmented",
+      "requested_speed_mm_s": 30.0
+    },
+    {
+      "at_utc": "2026-10-17T03:23:06.802366+00:00",
+      "stage": "complete",
+      "status": "complete",
+      "holding_assumption": "output_off_release_unverified",
+      "completed_destinations": [
+        "place_C"
+      ]
+    }
+  ],
+  "source": "pick_A",
+  "target": "place_C",
+  "locked_grasp_yaw_deg": 18.714704513549805,
+  "goal_controller_mm_deg": [
+    209.57937622070312,
+    -92.19148254394531,
+    -10.0,
+    18.714704513549805
+  ],
+  "segments": 7,
+  "validation_segment_count": 7,
+  "motion_profile": "segmented",
+  "requested_speed_mm_s": 30.0,
+  "physical_release_verified": false
+}

@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T03:17:52.935919+00:00",
+  "mode": "refill",
+  "routes": [
+    [
+      "pick_A",
+      "place_C"
+    ]
+  ],
+  "config_sha256": "342b0e0d101a3d9adbd4997af2ef35941b133b93aaf77a34153fcfd60e426168",
+  "robot_port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EA056287-if00",
+  "safe_z_mm": -10.0,
+  "yaw_policy": "hold",
+  "yaw_reference_deg": 18.71470069885254,
+  "status": "stopped",
+  "stage": "stopped",
+  "holding_assumption": "unverified_suction",
+  "completed_destinations": [],
+  "automatic_resume_allowed": false,
+  "events": [
+    {
+      "at_utc": "2026-10-17T03:17:52.935937+00:00",
+      "stage": "wait_for_source",
+      "status": "waiting_for_operator",
+      "target_index": 0,
+      "source": "pick_A",
+      "target": "place_C",
+      "continuous_transfers": true
+    },
+    {
+      "at_utc": "2026-10-17T03:17:56.202535+00:00",
+      "stage": "running",
+      "status": "running"
+    },
+    {
+      "at_utc": "2026-10-17T03:17:56.212608+00:00",
+      "stage": "raise_empty_at_current",
+      "goal_controller_mm_deg": [
+        206.99929809570312,
+        -63.36740112304687,
+        -10.0,
+        18.714704513549805
+      ],
+      "segments": 1,
+      "validation_segment_count": 1,
+      "motion_profile": "segmented"
+    },
+    {
+      "at_utc": "2026-10-17T03:17:56.593915+00:00",
+      "stage": "above_source",
+      "goal_controller_mm_deg": [
+        204.83059692382812,
+        69.3899154663086,
+        -10.0,
+        18.71470069885254
+      ],
+      "segments": 1,
+      "validation_segment_count": 30,
+      "motion_profile": "continuous"
+    },
+    {
+      "at_utc": "2026-10-17T03:18:04.142653+00:00",
+      "stage": "descend_to_source",
+      "goal_controller_mm_deg": [
+        204.83059692382812,
+        69.3899154663086,
+        -45.65318298339844,
+        18.71470069885254
+      ],
+      "segments": 8,
+      "validation_segment_count": 8,
+      "motion_profile": "segmented"
+    },
+    {
+      "at_utc": "2026-10-17T03:18:17.312279+00:00",
+      "stage": "suction_on",
+      "holding_assumption": "unverified_suction"
+    },
+    {
+      "at_utc": "2026-10-17T03:18:17.332536+00:00",
+      "stage": "grasp_yaw_locked",
+      "locked_grasp_yaw_deg": 18.714704513549805
+    },
+    {
+      "at_utc": "2026-10-17T03:18:17.342509+00:00",
+      "stage": "trial_lift_10mm",
+      "goal_controller_mm_deg": [
+        204.83059692382812,
+        69.3899154663086,
+        -35.65318298339844,
+        18.714704513549805
+      ],
+      "segments": 3,
+      "validation_segment_count": 3,
+      "motion_profile": "segmented"
+    },
+    {
+      "at_utc": "2026-10-17T03:19:17.363311+00:00",
+      "stage": "stopped",
+      "status": "stopped",
+      "error": "RuntimeError: Operator canceled execution; motion stopped, suction retained"
+    }
+  ],
+  "target_index": 0,
+  "source": "pick_A",
+  "target": "place_C",
+  "continuous_transfers": true,
+  "goal_controller_mm_deg": [
+    204.83059692382812,
+    69.3899154663086,
+    -35.65318298339844,
+    18.714704513549805
+  ],
+  "segments": 3,
+  "validation_segment_count": 3,
+  "motion_profile": "segmented",
+  "locked_grasp_yaw_deg": 18.714704513549805,
+  "error": "RuntimeError: Operator canceled execution; motion stopped, suction retained"
+}

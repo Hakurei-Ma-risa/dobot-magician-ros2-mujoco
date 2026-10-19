@@ -71,3 +71,14 @@ publishes robot-frame objects on `/mani/scene_objects`. For tabletop targets it
 intersects the bbox-center camera ray with the configured support plane; depth
 validates the ROI and takes over once the object has been lifted. The same node
 works with MuJoCo segmentation today and a YOLO detector later.
+
+## Fixed-camera point calibration
+
+For a Dobot with XYZ+yaw motion, use measured RGB-D point/TCP correspondences
+rather than an unconstrained hand-eye rotation solver. The read-only collector
+is `ros2 run mani_dobot handeye_capture`; the generic rigid-transform solver is
+`ros2 run mani_perception point_calibration_solve`. Recording requires a
+verified physical TCP reference, fresh stationary robot state and no alarms.
+The solver separates fitting points from independent check points and never
+publishes an unaccepted result. See the repository's `HAND_EYE_CALIBRATION.md`
+for the complete procedure and current commissioning limits.
