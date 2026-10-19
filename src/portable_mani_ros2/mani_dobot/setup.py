@@ -32,6 +32,7 @@ setup(
             "chip_tray = mani_dobot.chip_tray:main",
             "sensor_check = mani_dobot.sensor_check:main",
             "dobot_home = mani_dobot.dobot_home:main",
+            "conveyor_sort = mani_dobot.conveyor_sort:main",
         ],
     },
 )
