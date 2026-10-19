@@ -19,6 +19,8 @@ D435i 的 RGB-D 数据通路。
 | RealSense D435i | 可用 | RGB、深度、对齐深度、CameraInfo、USB 3 |
 | Portable Mani | 原型可用 | 通用接口、Dobot adapter、MuJoCo backend、RGB-D localizer |
 | Gemini ER 多物体仿真 | 已跑通一例 | 基座 RGB-D 识别、抓取、视觉复核、空位放置；仅仿真 |
+| 芯片盘搬运（真机） | 可用 | 四角示教 15×6 网格，9 片按格号搬运 |
+| 双机传送带分拣（真机） | 单块已跑通 | 1号送料、传送带、D435i + Gemini 颜色识别、2号分盒；9 块连续运行待验证 |
 | LeRobot / ACT | 未集成 | 建议后续通过通用 observation/action contract 接入 |
 
 真机测试结果：
@@ -410,6 +412,73 @@ ros2 service call /dobot_suction_cup_service \
 4. 放置时先接触桌面，再关闭吸盘，最后垂直抬离；
 5. Dobot 没有末端力传感器，也没有可靠的真空闭环反馈，不能盲目下压；
 6. 更换桌面、工具或安装位置后必须重新标定接触高度。
+
+## 实验室真机工具（2026-10）
+
+`mani_dobot` 里的这组工具直接走 Dobot 串口，与驱动共用串口锁，不需要启动 ROS
+驱动节点。示教和运行都由回车推进，提示为中文。下面的端口、IO、坐标和耗时来自
+本实验室两台设备在 2026-10-17 的实测，换设备或换安装位置后要重新测。
+
+| 命令 | 作用 | 真机情况 |
+|---|---|---|
+| `fast_pick_place` | 示教点 A→B/C/D 吸盘搬运，整段动作一次排进控制器队列 | 已上机，约 9 秒一次 |
+| `dobot_home 1` / `2` | 手动回零：实时显示 J2/J3，姿态合法后清报警，回车后回零到 `(200, 0, 80)` | 已上机 |
+| `sensor_check` | 手动检测两台的 GP2 颜色、GP4 输入、EIO1–20 电平和 Stepper1 传送带 | 已上机 |
+| `chip_tray` | 芯片盘：四角示教、网格插值、按格号搬运，可选相机检查 | 已上机，9 片搬运 |
+| `conveyor_sort` | 双机传送带分拣：示教、视觉测试、运行、单点重教、取下吸着的方块 | 单块全流程已跑通 |
+
+### 双机传送带分拣
+
+流程：1号从 3×3 物料区取方块放到传送带放料点；传送带走固定步数停在 2号取料
+位置；D435i 拍一张交给 Gemini，判断带上有没有方块、什么颜色；2号按示教点吸起，
+放进对应颜色的盒子，然后停在盒子上方等待（不挡相机）。2号分拣时，1号已经去取
+下一块。Gemini 没看到方块、颜色拿不准或请求出错时，程序停下来让人重拍、让传送带
+再走一点，或手动输入颜色。
+
+```bash
+ros2 run mani_dobot dobot_home 1                     # 每次上电后两台都要回零
+ros2 run mani_dobot dobot_home 2
+ros2 run mani_dobot conveyor_sort teach 1            # 物料区四角 + 传送带放料点
+ros2 run mani_dobot conveyor_sort teach 2            # 1号送料 → 2号取料点 → 红/绿/蓝盒
+
+ros2 launch mani_perception d435i.launch.py color_profile:=640x480x15 depth_profile:=640x480x15
+export GEMINI_API_KEY='...'                          # 不要写进仓库
+ros2 run mani_dobot conveyor_sort vision --compare   # 同一张照片比较两个模型
+ros2 run mani_dobot conveyor_sort run --dry-run --box-mm 30
+ros2 run mani_dobot conveyor_sort run --count 1 --speed 80 --z-speed 50 --joint-speed 60 --box-mm 30
+```
+
+单项重教：`teach 1 --only material`（只重教物料区四角）、
+`teach 2 --only pick|red|green|blue`；停下后取下吸着的方块：`release 1|2`。
+示教点存在 `reports/conveyor_sort/setup.json`，每次识别的照片、带框图和模型回答
+存在 `reports/conveyor_sort/vision/`。
+
+运行前程序会检查报警、吸盘状态、相机画面和整条路径的关节限位。2号的点高低差很大
+（盒子 z≈66–81，取料点 z≈12），离底座近的地方又抬不高，所以 2号每段只抬到该段
+需要的高度（盒壁按 `--box-mm` 留余量），段间用关节插补（MOVJ）移动；1号走直线。
+
+### 实测硬件结论
+
+- 两台机器：1号 SN `DT1425061204`，串口
+  `/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EA056287-if00`；2号 SN
+  `DT1426010780`，串口 `..._598C000140-if00`；固件 4.0.5。用 by-id 路径，
+  `ttyACM` 编号会随插入顺序互换。
+- 底座是增量编码器：每次上电 J1、J4 读数为 0，回零前示教点都不可用。断电后手臂会
+  垂到超限姿态（报警 0x43/0x44/0x49），要按住解锁键把小臂抬起来。
+- 控制器规划还有平行四边形联动限位 `J3 ≥ −15 + max(J2 − 40, 0)`，超出时报 0x12。
+  这条已写进 `chip_tray.joint_angles`，所有计划在动作前按它检查。
+- 2号运行时保持第 4 轴角度不变，R 跟随底座转动；若保持 R 不变，从传送带转到盒子
+  时 J4 会超出 ±150°。
+- 传感器端口编号（固件 4.0.5）：GP1=0、GP2=1、GP4=3、GP5=4。发 2 或 5 会留下清不掉
+  的 0x01 报警，只能断电。带参数的 IO 复用读取（命令 130）会被当成设置，不要用。
+- GP4 的信号在 EIO5，要设为上拉输入（IO 复用功能 5），否则可能一直读 0。1号图像
+  传感器空闲 1、遮挡 0；2号压感松开 0、按下 1。
+- 2号 GP2 颜色传感器读红色不稳（同一红块：红 11、绿 8、无 23），已改用视觉。
+- 传送带接 1号 Stepper1，速度为负才是正向。−5000 步/秒时放料点到 2号取料点用
+  11.7 秒，即 58500 步（`--belt-pulses`）。
+- Gemini（2026-10-17）：图片单独上传要约 4 秒，现改为随请求内联发送。
+  `gemini-flash-lite-latest` 约 1.2–2.9 秒，`gemini-robotics-er-2-preview`
+  （thinking low）约 3–5 秒；单次请求偶尔超过 30 秒，所以有超时和人工兜底。
 
 ## Portable Mani 快速入口
 

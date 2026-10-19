@@ -97,3 +97,49 @@ defaults of 5 mm and 1 degree.
 
 Do not send a `/mani/move_to_pose` goal until the USB, joint-map and TCP checks
 in `mujoco_sim/README.md` have passed on the real robot.
+
+## Fast taught suction pick-and-place
+
+`fast_pick_place` runs the taught A -> B/C/D suction task from
+`reports/calibration/2026-10-17/task_waypoints.json`. Each cycle is queued on
+the Dobot controller in one go (MOVL up, across at `--safe-z`, down, suction,
+dwell), so moves run back to back. R is held at the taught pick_A value, so the
+block does not rotate. It talks to the serial port directly, shares the driver's
+UART lock, and can run while `dobot_state_publisher` is up. No other ROS node is
+needed.
+
+```bash
+cd /home/hongjin/Documents/Codex/2026-09-17/new-chat/outputs/dobot_magician_ros2
+source /opt/ros/humble/setup.bash && source .venv_ros_mujoco/bin/activate && source install/setup.bash
+
+ros2 run mani_dobot fast_pick_place --dry-run          # print queued steps only
+ros2 run mani_dobot fast_pick_place --check            # read pose/alarms/tool bias
+ros2 run mani_dobot fast_pick_place --targets B        # Challenge 1
+ros2 run mani_dobot fast_pick_place                    # Challenge 3: A->B, A->C, A->D
+```
+
+Between cycles it waits for Enter while you put the next block at A (`q` quits),
+or for `--refill-delay SECONDS`. Defaults: `--speed 150 --z-speed 80 --accel 150`
+(mm/s, mm/s^2), `--grip-ms 400 --release-ms 400`. Before moving it checks the
+controller tool bias is the taught 59.7 mm and clears latched alarms. While
+moving it stops on a new alarm or a stalled queue. Ctrl+C force-stops and
+clears the queue and leaves the suction as it is.
+
+## Lab tools (2026-10)
+
+These talk to the Dobot serial port directly (same UART lock as the driver) and
+prompt in Chinese; teaching and runs advance on Enter. Usage, the two-robot
+conveyor flow and the hardware facts measured on 2026-10-17 are documented in
+the repository README, section "实验室真机工具（2026-10）".
+
+| Command | Purpose |
+|---|---|
+| `dobot_home 1\|2` | manual homing; live J2/J3, clears alarms once the pose is legal |
+| `sensor_check` | manual check of GP2 colour, GP4 input, EIO1-20 levels and the Stepper1 belt |
+| `chip_tray teach\|park\|view\|click\|status\|move` | taught 15x6 chip tray, moves chips by cell |
+| `conveyor_sort teach\|vision\|run\|release` | two-robot belt sorting; Gemini on a D435i frame gives the colour |
+
+Modules: `fast_pick_place.Dobot` (queued serial driver with MOVL/MOVJ, homing,
+thread-safe), `chip_tray` (grid fit, firmware IK incl. the parallelogram limit,
+path checks), `belt_vision` (D435i frame via ROS, Gemini request, logs),
+`conveyor_sort` (plans, teach flows, runner).
