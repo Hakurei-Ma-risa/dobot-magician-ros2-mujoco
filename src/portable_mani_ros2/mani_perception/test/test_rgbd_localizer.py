@@ -80,3 +80,18 @@ def test_roi_points_recovers_center_without_background_depth() -> None:
     )
     assert point is not None
     np.testing.assert_allclose(point, [-0.0045, 0.0045, 0.05], atol=1e-8)
+
+
+def test_localize_roi_points_reports_a_lifted_object_where_it_is() -> None:
+    intrinsics = PinholeIntrinsics(fx=100.0, fy=100.0, cx=50.0, cy=50.0)
+    # Camera 1 m above the table looking straight down (z up in target frame).
+    rotation = np.diag([1.0, -1.0, -1.0])
+    translation = np.array([0.0, 0.0, 1.0])
+    depth = np.full((100, 100), 1.0)  # table at z = 0
+    depth[40:60, 40:60] = 0.85  # something 0.15 m above the table
+    position = localize_roi_points(
+        depth, (35, 35, 30, 30), intrinsics, translation, rotation,
+        support_plane_z_m=0.0, object_height_m=0.04,
+    )
+    assert position is not None
+    assert position[2] > 0.14

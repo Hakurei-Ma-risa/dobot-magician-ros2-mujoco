@@ -39,4 +39,20 @@ def test_pick_executor_uses_task_space_and_verifies_lift() -> None:
     assert report.success
     assert report.stage is PickStage.COMPLETE
     assert len(backend.moves) == 3
-    assert np.isclose(backend.moves[1].position[2], 0.054)
+    # 50 mm object: TCP stops 40 mm below its top so the gripper body clears it.
+    assert np.isclose(backend.moves[1].position[2], 0.060)
+
+
+def test_tall_objects_are_grasped_near_the_top() -> None:
+    from mani_tasks.pick import PickConfig, plan_top_down_pick
+
+    def plan(height: float):
+        target = SceneObjectState(
+            uuid="t", class_id="can",
+            pose=Pose.from_xyz_yaw(0.25, 0.0, 0.05 + height / 2, 0.0, frame_id="base"),
+            size=np.array([0.03, 0.03, height]), confidence=1.0, source="test",
+        )
+        return plan_top_down_pick(target, PickConfig())
+
+    assert abs(plan(0.036).grasp_pose.position[2] - 0.054) < 1e-9  # short: near the table
+    assert abs(plan(0.090).grasp_pose.position[2] - 0.100) < 1e-9  # tall: top - 4 cm

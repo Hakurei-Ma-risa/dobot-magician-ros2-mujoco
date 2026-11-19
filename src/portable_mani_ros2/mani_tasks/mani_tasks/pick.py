@@ -30,6 +30,9 @@ class PickConfig:
     tcp_table_clearance_m: float = 0.004
     required_object_lift_m: float = 0.035
     move_duration_s: float = 1.0
+    # How far the TCP may go below the object's top. Tall objects (cans) are
+    # held near the top so the gripper body does not hit them.
+    max_grasp_depth_m: float = 0.040
 
     def __post_init__(self) -> None:
         positive = {
@@ -38,6 +41,7 @@ class PickConfig:
             "tcp_table_clearance_m": self.tcp_table_clearance_m,
             "required_object_lift_m": self.required_object_lift_m,
             "move_duration_s": self.move_duration_s,
+            "max_grasp_depth_m": self.max_grasp_depth_m,
         }
         for name, value in positive.items():
             if float(value) <= 0.0:
@@ -64,7 +68,11 @@ class TopDownPickPlan:
 def plan_top_down_pick(target: SceneObjectState, config: PickConfig) -> TopDownPickPlan:
     initial_z = float(target.pose.position[2])
     table_z = initial_z - 0.5 * float(target.size[2])
-    grasp_z = table_z + config.tcp_table_clearance_m
+    object_top_z = table_z + float(target.size[2])
+    grasp_z = max(
+        table_z + config.tcp_table_clearance_m,
+        object_top_z - config.max_grasp_depth_m,
+    )
     x, y = (float(value) for value in target.pose.position[:2])
     # A cylinder is rotationally symmetric.  Radial yaw keeps the wrist near
     # neutral instead of inheriting a perception yaw with no task meaning.

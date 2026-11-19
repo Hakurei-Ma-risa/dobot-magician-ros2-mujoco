@@ -188,6 +188,18 @@ def localize_roi_points(
         axis=0,
     )
     points = (rotation_target_from_camera @ optical).T + translation_target_from_camera
+    above = points[points[:, 2] >= support_plane_z_m + 0.005]
+    if (
+        above.shape[0] >= 20
+        and float(np.quantile(above[:, 2], 0.05)) > support_plane_z_m + 0.020
+        and float(np.quantile(above[:, 2], 0.95))
+        > support_plane_z_m + object_height_m + 0.020
+    ):
+        # Nothing in the box touches the table and something sticks out above
+        # the resting object's top: it has been lifted (e.g. it is in the
+        # gripper). Report where it really is. A top-down view of a resting
+        # object fails the second test, so it keeps the support-plane prior.
+        return np.median(above, axis=0)
     object_points = points[
         (points[:, 2] >= support_plane_z_m + 0.005)
         & (points[:, 2] <= support_plane_z_m + object_height_m + 0.015)
@@ -379,7 +391,12 @@ class RgbdLocalizer(Node):
             item.pose.pose.position.x = float(position[0])
             item.pose.pose.position.y = float(position[1])
             item.pose.pose.position.z = float(position[2])
-            item.pose.pose.orientation.w = 1.0
+            # Keep the detector's yaw if it sent one (all-zero = no estimate).
+            q = detection.pose.pose.orientation
+            if q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w > 0.5:
+                item.pose.pose.orientation = q
+            else:
+                item.pose.pose.orientation.w = 1.0
             item.size = detection.size
             item.bbox_2d = detection.bbox_2d
             item.source = "rgbd_bbox_depth"
