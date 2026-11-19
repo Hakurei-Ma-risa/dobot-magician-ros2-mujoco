@@ -91,6 +91,11 @@ Nothing else changes: same topics in, same topic out.
   z = 0.12 m, and at r ≈ 0.31 m not above ≈ 0.13 m. That is why `pick` uses a
   5 cm approach and lift, and why the 9 cm cans at the edge of the MuJoCo
   table are found and chosen but usually cannot be picked from above.
+- The lift check can say `FAILED at verify` although the object is in the
+  gripper: with the arm in view, the depth image may join the lifted object,
+  the arm and a neighbour into one blob, and the follower loses the target.
+  Look at the simulator window. (Measured: purple block 8/8 picked and
+  confirmed; yellow cylinder 8/8 picked, confirmed 1 of 4 after the fix.)
 - Fast DDS must have the large shared-memory profile (`setup_env.bash` sets
   it), or 640×480 images arrive at about 0.4 Hz instead of 10 Hz.
 - Real camera: the camera → robot TF must come from a calibration. Without a

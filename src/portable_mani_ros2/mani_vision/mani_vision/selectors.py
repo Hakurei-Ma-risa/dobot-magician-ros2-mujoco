@@ -130,6 +130,50 @@ def colour_name(image_rgb: np.ndarray, bbox_xywh: tuple[int, int, int, int]) -> 
     return max(votes, key=votes.get)
 
 
+def _object_pixels_hsv(image_rgb: np.ndarray, bbox_xywh: tuple[int, int, int, int]) -> np.ndarray:
+    """Saturated pixels inside the box that do not look like the table."""
+
+    height, width = image_rgb.shape[:2]
+    x, y, w, h = bbox_xywh
+    x0, y0, x1, y1 = max(0, x), max(0, y), min(width, x + w), min(height, y + h)
+    if x0 >= x1 or y0 >= y1:
+        return np.zeros((0, 3), np.float32)
+    hsv = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2HSV).astype(np.float32)
+    pad = 6
+    ox0, oy0 = max(0, x0 - pad), max(0, y0 - pad)
+    ox1, oy1 = min(width, x1 + pad), min(height, y1 + pad)
+    frame = np.ones((oy1 - oy0, ox1 - ox0), bool)
+    frame[y0 - oy0 : y1 - oy0, x0 - ox0 : x1 - ox0] = False
+    inside = hsv[y0:y1, x0:x1].reshape(-1, 3)
+    outside = hsv[oy0:oy1, ox0:ox1][frame]
+    if outside.size:
+        background = np.median(outside, axis=0)
+        gap = np.abs(inside[:, 0] - background[0])
+        gap = np.minimum(gap, 180.0 - gap)
+        inside = inside[~((gap < 6) & (np.abs(inside[:, 1] - background[1]) < 50))]
+    return inside[(inside[:, 1] > 80) & (inside[:, 2] > 50)]
+
+
+def object_hue(image_rgb: np.ndarray, bbox_xywh: tuple[int, int, int, int]) -> float | None:
+    """Typical hue (OpenCV 0..179) of the coloured object in the box, or None."""
+
+    pixels = _object_pixels_hsv(image_rgb, bbox_xywh)
+    if pixels.shape[0] < 30:
+        return None
+    angles = pixels[:, 0] * (np.pi / 90.0)  # hue is circular
+    mean = np.arctan2(np.sin(angles).mean(), np.cos(angles).mean())
+    return float((mean * 90.0 / np.pi) % 180.0)
+
+
+def hue_pixel_count(image_rgb: np.ndarray, bbox_xywh: tuple[int, int, int, int], hue: float, tolerance: float = 12.0) -> int:
+    """How many object pixels in the box have roughly this hue."""
+
+    pixels = _object_pixels_hsv(image_rgb, bbox_xywh)
+    gap = np.abs(pixels[:, 0] - hue)
+    gap = np.minimum(gap, 180.0 - gap)
+    return int(np.count_nonzero(gap <= tolerance))
+
+
 # ---------------------------------------------------------------- rule
 
 

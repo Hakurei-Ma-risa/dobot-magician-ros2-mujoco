@@ -28,7 +28,7 @@ from std_msgs.msg import String
 
 import cv2
 
-from mani_vision.selectors import Box, colour_name, draw_marks, make_selector
+from mani_vision.selectors import Box, Choice, RuleSelector, draw_marks, hue_pixel_count, make_selector, object_hue
 
 
 def image_to_rgb(message: Image) -> np.ndarray:
@@ -89,7 +89,7 @@ class ChooseTarget(Node):
         self._busy = False
         self._target: SceneObject | None = None  # what we send downstream
         self._last_xy: tuple[float, float] | None = None
-        self._colour: str = "unknown"  # target colour, checked while following
+        self._hue: float | None = None  # target hue, checked while following
         self._detections = self.create_publisher(
             SceneObjectArray, str(self.get_parameter("output_topic").value), 10
         )
@@ -138,14 +138,16 @@ class ChooseTarget(Node):
             seen = follow(message, self._last_xy, float(self.get_parameter("follow_radius_m").value))
             if seen is None:
                 return  # lost for this frame; keep the last box
-            if self._colour not in ("unknown", "grey", "black", "white") and self._image is not None:
-                # The box must still show the target's colour. If only the
-                # (grey) gripper is there, the object was not picked up.
+            if self._hue is not None and self._image is not None:
+                # A coloured target must still show its colour in the box. If
+                # only the (grey) gripper is there, the object was not picked
+                # up. Count pixels of the target's hue: a small object held in
+                # a big gripper still gives dozens of them, the gripper none.
                 r = seen.bbox_2d
-                seen_colour = colour_name(
-                    image_to_rgb(self._image), (r.x_offset, r.y_offset, r.width, r.height)
+                count = hue_pixel_count(
+                    image_to_rgb(self._image), (r.x_offset, r.y_offset, r.width, r.height), self._hue
                 )
-                if seen_colour != self._colour:
+                if count < 30:
                     return
             self._last_xy = (seen.pose.pose.position.x, seen.pose.pose.position.y)
             self._target.bbox_2d = seen.bbox_2d
@@ -178,9 +180,11 @@ class ChooseTarget(Node):
             try:
                 choice = self.selector.select(text, image, boxes)
             except Exception as exc:  # network, key, quota ...
-                self.get_logger().error(f"selector failed: {exc}")
-                self._report(text, -1, f"selector error: {exc}", boxes, image, 0.0, 0, 0)
-                return
+                # Never leave the participant stuck: fall back to the free,
+                # offline rule chooser and say so.
+                self.get_logger().error(f"{self.selector.name} failed ({exc}); using the rule chooser")
+                choice = RuleSelector().select(text, image, boxes)
+                choice = Choice(choice.index, f"[rule fallback] {choice.reason}", choice.seconds)
             self._report(text, choice.index, choice.reason, boxes, image,
                          choice.seconds, choice.input_tokens, choice.output_tokens)
             if choice.index < 0:
@@ -196,9 +200,9 @@ class ChooseTarget(Node):
             target.bbox_2d = chosen.bbox_2d
             target.source = f"choose_target/{self.selector.name}"
             r = chosen.bbox_2d
-            colour = colour_name(image, (r.x_offset, r.y_offset, r.width, r.height))
+            hue = object_hue(image, (r.x_offset, r.y_offset, r.width, r.height))
             with self._lock:
-                self._colour = colour
+                self._hue = hue
                 self._target = target
                 self._last_xy = (chosen.pose.pose.position.x, chosen.pose.pose.position.y)
                 self._publish_target()

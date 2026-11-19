@@ -69,3 +69,14 @@ def test_rule_selector_uses_colour_then_position() -> None:
     assert selector.select("the one on the right", image, boxes).index == 1
     assert selector.select("anything", image, boxes).index == 0  # nearest
     assert selector.select("the green one", image, boxes).index == -1
+
+
+def test_hue_count_tells_object_from_grey_gripper() -> None:
+    from mani_vision.selectors import hue_pixel_count, object_hue
+
+    image = _image_with_two_squares()
+    hue = object_hue(image, (135, 25, 40, 40))  # the blue square
+    assert hue is not None
+    assert hue_pixel_count(image, (135, 25, 40, 40), hue) > 500
+    image[30:60, 140:170] = (90, 90, 95)  # now only something grey is there
+    assert hue_pixel_count(image, (135, 25, 40, 40), hue) == 0

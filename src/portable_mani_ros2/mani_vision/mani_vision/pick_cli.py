@@ -141,6 +141,10 @@ def main() -> int:
         result = node.run_action(node.pick, goal, 90.0)
         status = "SUCCEEDED" if result.success else f"FAILED at {result.failure_stage}"
         print(f"[5/5] pick {status}: {result.message}", flush=True)
+        if not result.success and result.failure_stage == "verify":
+            print("      The camera could not confirm the lift. Look at the simulator: if the object\n"
+                  "      is in the gripper, the pick worked. With the arm in view, the depth image can\n"
+                  "      join the object to its neighbours and the follower loses it (README, Limits).", flush=True)
         return 0 if result.success else 1
     except RuntimeError as exc:
         print("error:", exc)
