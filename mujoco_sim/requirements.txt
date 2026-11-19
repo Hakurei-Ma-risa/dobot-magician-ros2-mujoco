@@ -1,3 +1,6 @@
+# Standalone Conda env (Python 3.12) ONLY. Do NOT install this file into the
+# ROS 2 venv: numpy 2 would replace the system numpy 1.21 and break cv2/cv_bridge.
+# For the ROS 2 venv use: pip install --no-deps -e mujoco_sim (see README).
 mujoco==3.13.0
 gymnasium==1.3.0
 numpy==2.5.3

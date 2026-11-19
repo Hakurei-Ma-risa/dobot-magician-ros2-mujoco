@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fast DDS (ROS 2 Humble default) shares data between processes on one
+  computer through a 0.5 MB shared-memory segment. A 640x480 colour image is
+  0.9 MB, so it falls back to UDP fragments and, with best-effort camera
+  topics, most frames are lost (measured: 10 Hz sent, about 0.4 Hz received).
+  A 16 MB segment fixes it (measured: 7.6 Hz received). setup_env.bash points
+  FASTRTPS_DEFAULT_PROFILES_FILE here. UDP stays on for other computers.
+-->
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+  <transport_descriptors>
+    <transport_descriptor>
+      <transport_id>big_shm</transport_id>
+      <type>SHM</type>
+      <segment_size>16777216</segment_size>
+    </transport_descriptor>
+    <transport_descriptor>
+      <transport_id>udp</transport_id>
+      <type>UDPv4</type>
+    </transport_descriptor>
+  </transport_descriptors>
+  <participant profile_name="big_shm_participant" is_default_profile="true">
+    <rtps>
+      <userTransports>
+        <transport_id>big_shm</transport_id>
+        <transport_id>udp</transport_id>
+      </userTransports>
+      <useBuiltinTransports>false</useBuiltinTransports>
+    </rtps>
+  </participant>
+</profiles>

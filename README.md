@@ -9,6 +9,25 @@ D435i 的 RGB-D 数据通路。
 > 断电。README 中的真机坐标来自一台具体设备和桌面标定，不能直接复制到另一套
 > 机械臂或安装环境。
 
+## Course quick start (English)
+
+Tested on Ubuntu 22.04 + ROS 2 Humble. Install: see **“2. MuJoCo 环境”** below
+(the venv block; every command is plain shell). Then, in every new terminal:
+
+```bash
+source ~/dobot_ws/dobot-magician-ros2-mujoco/setup_env.bash
+```
+
+Simulation with the vision modules (find objects → choose target → localize → pick):
+
+```bash
+ros2 launch mani_vision course_sim.launch.py            # terminal 1 (selector:=deepseek optional)
+ros2 run mani_vision pick "the purple block"            # terminal 2
+```
+
+See [mani_vision/README.md](src/portable_mani_ros2/mani_vision/README.md) for the
+module contracts (topics) and how to swap a module.
+
 ## 当前状态
 
 | 模块 | 状态 | 已验证内容 |
@@ -141,20 +160,39 @@ python -m pip install -e src/portable_mani_ros2/mani_core
 python -m pip install -e src/portable_mani_ros2/mani_dobot
 ```
 
-ROS 2 + MuJoCo + Gemini 使用独立的系统 Python 3.10 venv，不要使用 Conda
-的 3.12 环境启动 ROS 节点。首次在本机创建并构建：
+ROS 2 + MuJoCo（含 Gemini、课程视觉模块）使用独立的系统 Python 3.10 venv，
+不要使用 Conda 的 3.12 环境启动 ROS 节点。下面是在全新 Ubuntu 22.04 + ROS 2
+Humble 上实测通过的完整步骤（20 个包全部编译、仿真抓取成功）：
 
 ```bash
 conda deactivate 2>/dev/null || true
-sudo apt install -y python3-venv python3-opencv
+sudo apt update
+sudo apt install -y git python3-venv python3-pip python3-opencv \
+  python3-colcon-common-extensions python3-rosdep ros-humble-xacro
 source /opt/ros/humble/setup.bash
+sudo rosdep init 2>/dev/null || true   # 每台电脑只需一次
+rosdep update
+rosdep install --from-paths src --ignore-src -r -y
 python3 -m venv --system-site-packages .venv_ros_mujoco
 source .venv_ros_mujoco/bin/activate
-python -m pip install 'mujoco==3.13.0' google-genai
-python -m colcon build --symlink-install --packages-select \
-  mani_interfaces mani_core mani_tasks mani_perception mani_dobot mani_mujoco mani_gemini
-source install/setup.bash
+python -m pip install -U pip
+python -m pip install mujoco==3.13.0 pybullet==3.2.7 transforms3d==0.4.1 pyserial==3.5
+python -m pip install --no-deps -e mujoco_sim
+python -m colcon build --symlink-install
+source setup_env.bash
 ```
+
+注意：
+
+- `--no-deps` 是故意的：`mujoco_sim/requirements.txt` 只给 Conda 3.12 用，
+  装进这个 venv 会把系统 numpy 1.21 换成 numpy 2，导致 `cv2`、`cv_bridge`
+  报 `numpy.core.multiarray failed to import`。
+- 不要加 `--packages-select`：`mani_dobot` 依赖 `dobot_msgs`，全量编译约 15 s。
+- `pybullet` 必须是 3.2.7（3.2.5 没有 Python 3.10 的轮子），`dobot_bringup`
+  的轨迹校验会用到它。
+- 以后每开一个新终端，只需 `source setup_env.bash`（加载 ROS、venv、编译结果，
+  并设置 Fast DDS 大图像共享内存，否则 640×480 图像只能收到约 0.4 Hz）。
+- 需要 Gemini 时再 `python -m pip install google-genai`。
 
 可用 `python -c 'import cv2; print(hasattr(cv2, "TrackerCSRT_create"))'`
 确认 OpenCV 含 CSRT 跟踪器。

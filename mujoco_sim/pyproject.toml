@@ -10,7 +10,7 @@ requires-python = ">=3.10"
 dependencies = [
   "gymnasium>=1.1,<2",
   "mujoco==3.13.0",
-  "numpy>=2,<3",
+  "numpy>=1.21,<3",  # >=1.21: keep Ubuntu 22.04 system numpy (cv2, cv_bridge)
   "pillow>=11",
   "pycollada>=0.9,<1",
   "trimesh>=5,<6",
