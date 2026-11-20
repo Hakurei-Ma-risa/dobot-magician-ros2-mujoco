@@ -5,7 +5,7 @@
   0.9 MB, so it falls back to UDP fragments and, with best-effort camera
   topics, most frames are lost (measured: 10 Hz sent, about 0.4 Hz received).
   A 16 MB segment fixes it (measured: 7.6 Hz received). setup_env.bash points
-  FASTRTPS_DEFAULT_PROFILES_FILE here. UDP stays on for other computers.
+  FASTRTPS_DEFAULT_PROFILES_FILE here. UDP is limited to this computer (127.0.0.1).
 -->
 <profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
   <transport_descriptors>
@@ -17,6 +17,11 @@
     <transport_descriptor>
       <transport_id>udp</transport_id>
       <type>UDPv4</type>
+      <!-- This course never talks across computers: stay on this laptop so
+           10 laptops on one Wi-Fi cannot control each other's robots. -->
+      <interfaceWhiteList>
+        <address>127.0.0.1</address>
+      </interfaceWhiteList>
     </transport_descriptor>
   </transport_descriptors>
   <participant profile_name="big_shm_participant" is_default_profile="true">
