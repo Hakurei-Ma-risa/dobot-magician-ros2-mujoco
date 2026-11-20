@@ -18,8 +18,10 @@ def generate_launch_description() -> LaunchDescription:
         ),
         launch_arguments={
             "scene_mode": "clutter",
-            "viewer": LaunchConfiguration("viewer"),
-            "visualize": "false",
+            # The in-process viewer cannot share GL with the RGB-D camera, so
+            # the window is the separate state_viewer process instead.
+            "viewer": "false",
+            "visualize": LaunchConfiguration("window"),
             "publish_camera": "true",
             "publish_perfect_detections": "false",
             "publish_ground_truth": LaunchConfiguration("ground_truth"),
@@ -39,7 +41,8 @@ def generate_launch_description() -> LaunchDescription:
     return LaunchDescription(
         [
             DeclareLaunchArgument("selector", default_value="rule", description="rule or deepseek"),
-            DeclareLaunchArgument("viewer", default_value="true"),
+            # Not called "viewer": that name belongs to the included launch file.
+            DeclareLaunchArgument("window", default_value="true", description="MuJoCo window"),
             DeclareLaunchArgument("ground_truth", default_value="false", description="for grading only"),
             sim,
             vision,
